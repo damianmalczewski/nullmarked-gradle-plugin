@@ -2,7 +2,7 @@
 
 Gradle plugin applying [JSpecify](https://jspecify.dev/)'s `@NullMarked` convention to Java projects.
 
-## What it does
+## Why bother with NullMarked Plugin
 
 Applying `io.github.malczuuu.nullmarked` to a Java project:
 
@@ -14,32 +14,16 @@ Applying `io.github.malczuuu.nullmarked` to a Java project:
 2. **Adds the JSpecify dependency** - `org.jspecify:jspecify:1.0.0` is added as `compileOnly` unless the build script
    already declares it in `compileOnly`, `implementation`, `api`, or `compileOnlyApi`.
 
-## Usage
+## Installation
 
-> [!IMPORTANT]
-> The project is in its draft stage and is not published anywhere. Usage requires building it to local Maven repository.
+Apply plugin in `build.gradle.kts`.
 
-1. Build project to local Maven repository.
-   ```sh
-   ./gradlew publishToMavenLocal
-   ```
-2. Add `mavenLocal` to `pluginManagement` in `settings.gradle.kts`.
-   ```kt
-   pluginManagement {
-       repositories {
-           gradlePluginPortal()
-           mavenCentral()
-           mavenLocal()
-       }
-   }
-   ```
-3. Apply plugin in `build.gradle.kts`.
-   ```kotlin
-   plugins {
-       java
-       id("io.github.malczuuu.nullmarked") version "0.1.0-SNAPSHOT"
-   }
-   ```
+```kotlin
+plugins {
+    java
+    id("io.github.malczuuu.nullmarked") version "0.1.0-SNAPSHOT"
+}
+```
 
 Configuration (all optional):
 
@@ -65,3 +49,27 @@ nullmarked {
 ./gradlew build            # compiles the plugin and runs its unit tests
 ./gradlew integrationTest  # TestKit compatibility test; -Pcompat.gradle.version=9.0.0 targets a specific Gradle
 ```
+
+## Using local snapshot
+
+1. Build project to local Maven repository.
+   ```sh
+   ./gradlew publishToMavenLocal
+   ```
+2. Add `mavenLocal` to `pluginManagement` in `settings.gradle.kts`.
+   ```kt
+   pluginManagement {
+       repositories {
+           gradlePluginPortal()
+           mavenCentral()
+           mavenLocal()
+       }
+   }
+   ```
+3. Apply plugin in `build.gradle.kts`.
+   ```kotlin
+   plugins {
+       java
+       id("io.github.malczuuu.nullmarked") version "0.1.0-SNAPSHOT"
+   }
+   ```
