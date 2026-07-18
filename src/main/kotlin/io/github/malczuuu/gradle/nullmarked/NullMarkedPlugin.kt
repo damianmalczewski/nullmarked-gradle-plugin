@@ -35,7 +35,7 @@ class NullMarkedPlugin : Plugin<Project> {
 
   override fun apply(project: Project) {
     val extension = project.extensions.create("nullmarked", NullMarkedExtension::class.java)
-    extension.generatePackageInfo.convention(true)
+    extension.enabled.convention(true)
     extension.jspecifyVersion.convention(DEFAULT_JSPECIFY_VERSION)
 
     project.plugins.withType(JavaPlugin::class.java) {
@@ -61,7 +61,7 @@ class NullMarkedPlugin : Plugin<Project> {
           // Scan only the hand-written source directories, not our own output.
           val outputDirFile = outputDir.get().asFile
           sourceDirectories.from(project.provider { mainSourceSet.java.srcDirs - outputDirFile })
-          onlyIf { extension.generatePackageInfo.get() }
+          onlyIf { extension.enabled.get() }
         }
 
     mainSourceSet.java.srcDir(generateTask.flatMap(GeneratePackageInfoTask::outputDirectory))

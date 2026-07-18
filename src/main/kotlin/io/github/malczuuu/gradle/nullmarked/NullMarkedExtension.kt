@@ -25,7 +25,7 @@ abstract class NullMarkedExtension {
    * Whether `package-info.java` files annotated with `@NullMarked` should be generated for non-empty packages that do
    * not declare one. Defaults to `true`.
    */
-  abstract val generatePackageInfo: Property<Boolean>
+  abstract val enabled: Property<Boolean>
 
   /**
    * Version of the `org.jspecify:jspecify` artifact added as a `compileOnly` dependency when the build script does not

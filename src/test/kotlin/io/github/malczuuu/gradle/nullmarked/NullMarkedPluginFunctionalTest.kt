@@ -84,7 +84,7 @@ class NullMarkedPluginFunctionalTest {
     project.appendToBuildScript(
         """
         nullmarked {
-            generatePackageInfo = false
+            enabled = false
         }
         """
     )

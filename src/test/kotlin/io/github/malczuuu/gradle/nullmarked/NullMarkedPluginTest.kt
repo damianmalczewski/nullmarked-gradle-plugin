@@ -56,7 +56,7 @@ class NullMarkedPluginTest {
 
     val extension = project.extensions.getByType(NullMarkedExtension::class.java)
 
-    assertThat(extension.generatePackageInfo.get()).isTrue()
+    assertThat(extension.enabled.get()).isTrue()
     assertThat(extension.jspecifyVersion.get()).isEqualTo(NullMarkedPlugin.DEFAULT_JSPECIFY_VERSION)
   }
 
