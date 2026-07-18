@@ -76,11 +76,14 @@ sourceSets["integrationTest"].apply {
 gradlePlugin {
     testSourceSets(sourceSets["test"], sourceSets["integrationTest"])
 
+    website = "https://github.com/damianmalczewski/gradle-nullmarked-plugin"
+    vcsUrl = "https://github.com/damianmalczewski/gradle-nullmarked-plugin"
+
     plugins {
-        create("gradle-jspecify") {
-            id = "io.github.malczuuu.gradle-jspecify"
-            implementationClass = "io.github.malczuuu.gradle.jspecify.JSpecifyPlugin"
-            displayName = "JSpecify Gradle Plugin"
+        create("gradle-nullmarked") {
+            id = "io.github.malczuuu.nullmarked"
+            implementationClass = "io.github.malczuuu.gradle.nullmarked.NullMarkedPlugin"
+            displayName = "NullMarked Gradle Plugin"
             description =
                 "Generates @NullMarked package-info.java for packages missing it and adds the JSpecify annotations as a compileOnly dependency."
             compatibility {

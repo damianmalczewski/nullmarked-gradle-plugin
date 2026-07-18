@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.gradle.jspecify
+package io.github.malczuuu.gradle.nullmarked
 
 import java.io.File
 import java.time.OffsetDateTime
@@ -85,15 +85,9 @@ abstract class GeneratePackageInfoTask : DefaultTask() {
           .resolve("package-info.java")
           .writeText(
               """
-                @Generated(
-                    value = "io.github.malczuuu.gradle-jspecify",
-                    date = "$generationDate",
-                    comments = "Generated to apply @NullMarked to the whole package."
-                )
                 @NullMarked
                 package $packageName;
 
-                import javax.annotation.processing.Generated;
                 import org.jspecify.annotations.NullMarked;
                 """
                   .trimIndent() + "\n"

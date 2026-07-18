@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.gradle.jspecify
+package io.github.malczuuu.gradle.nullmarked
 
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
@@ -23,7 +23,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
-class JSpecifyPluginFunctionalTest {
+class NullMarkedPluginFunctionalTest {
 
   @TempDir lateinit var projectDir: File
 
@@ -83,7 +83,7 @@ class JSpecifyPluginFunctionalTest {
   fun `generation can be disabled via the extension`() {
     project.appendToBuildScript(
         """
-        jspecify {
+        nullmarked {
             generatePackageInfo = false
         }
         """

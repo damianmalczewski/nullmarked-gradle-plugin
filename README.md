@@ -1,14 +1,14 @@
-# Gradle JSpecify Plugin
+# Gradle NullMarked Plugin
 
-Gradle plugin applying [JSpecify](https://jspecify.dev/) conventions to Java projects.
+Gradle plugin applying [JSpecify](https://jspecify.dev/)'s `@NullMarked` conventions to Java projects.
 
 ## What it does
 
-Applying `io.github.malczuuu.gradle-jspecify` to a Java project:
+Applying `io.github.malczuuu.nullmarked` to a Java project:
 
 1. **Generates `package-info.java`** - for every non-empty package of the `main` source set that does not declare its
    own `package-info.java`, the `generatePackageInfo` task generates one annotated with `@NullMarked` into
-   `build/generated/sources/jspecify/java/main`. The generated directory is registered as a source directory, so
+   `build/generated/sources/nullmarked/java/main`. The generated directory is registered as a source directory, so
    `compileJava` picks it up automatically. Hand-written `package-info.java` files always win - no file is generated for
    their packages.
 2. **Adds the JSpecify dependency** - `org.jspecify:jspecify:1.0.0` is added as `compileOnly` unless the build script
@@ -37,14 +37,14 @@ Applying `io.github.malczuuu.gradle-jspecify` to a Java project:
    ```kotlin
    plugins {
        java
-       id("io.github.malczuuu.gradle-jspecify") version "0.1.0-SNAPSHOT"
+       id("io.github.malczuuu.nullmarked") version "0.1.0-SNAPSHOT"
    }
    ```
 
 Configuration (all optional):
 
 ```kotlin
-jspecify {
+nullmarked {
     generatePackageInfo = true  // default; set false to disable generation
     jspecifyVersion = "1.0.0"   // version of the auto-added org.jspecify:jspecify dependency
 }

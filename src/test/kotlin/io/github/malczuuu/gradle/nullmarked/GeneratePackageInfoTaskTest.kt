@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.gradle.jspecify
+package io.github.malczuuu.gradle.nullmarked
 
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
@@ -65,7 +65,7 @@ class GeneratePackageInfoTaskTest {
   }
 
   @Test
-  fun `generated file contains NullMarked, Generated and package declaration`() {
+  fun `generated file contains @NullMarked and package declaration`() {
     writeSource("com/acme/Foo.java")
 
     task.generate()
@@ -75,9 +75,6 @@ class GeneratePackageInfoTaskTest {
         .contains("@NullMarked")
         .contains("package com.acme;")
         .contains("import org.jspecify.annotations.NullMarked;")
-        .contains("import javax.annotation.processing.Generated;")
-        .contains("value = \"io.github.malczuuu.gradle-jspecify\"")
-        .containsPattern("date = \"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}[+-Z]")
   }
 
   @Test

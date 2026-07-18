@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.gradle.jspecify
+package io.github.malczuuu.gradle.nullmarked
 
 import org.gradle.api.provider.Property
 
-/** Configuration for the JSpecify plugin, available in build scripts as `jspecify { ... }`. */
-abstract class JSpecifyExtension {
+/** Configuration for the NullMarked plugin, available in build scripts as `nullmarked { ... }`. */
+abstract class NullMarkedExtension {
 
   /**
    * Whether `package-info.java` files annotated with `@NullMarked` should be generated for non-empty packages that do
@@ -29,7 +29,7 @@ abstract class JSpecifyExtension {
 
   /**
    * Version of the `org.jspecify:jspecify` artifact added as a `compileOnly` dependency when the build script does not
-   * declare JSpecify itself. Defaults to [JSpecifyPlugin.DEFAULT_JSPECIFY_VERSION].
+   * declare JSpecify itself. Defaults to [NullMarkedPlugin.DEFAULT_JSPECIFY_VERSION].
    */
   abstract val jspecifyVersion: Property<String>
 }

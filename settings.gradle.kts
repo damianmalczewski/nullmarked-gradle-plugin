@@ -16,4 +16,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "gradle-jspecify"
+rootProject.name = "gradle-nullmarked-plugin"

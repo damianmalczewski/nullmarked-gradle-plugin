@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.gradle.jspecify
+package io.github.malczuuu.gradle.nullmarked
 
 import java.io.File
 import org.gradle.testkit.runner.GradleRunner
@@ -49,7 +49,7 @@ class TestProject(val dir: File) {
         """
         plugins {
             java
-            id("io.github.malczuuu.gradle-jspecify")
+            id("io.github.malczuuu.nullmarked")
         }
 
         repositories {
@@ -107,7 +107,7 @@ class TestProject(val dir: File) {
       GradleRunner.create().withProjectDir(dir).withPluginClasspath().withArguments(*arguments)
 
   fun generatedPackageInfo(packageName: String): File =
-      packageInfoUnder(file("build/generated/sources/jspecify/java/main"), packageName)
+      packageInfoUnder(file("build/generated/sources/nullmarked/java/main"), packageName)
 
   fun compiledClass(binaryName: String): File = file("build/classes/java/main/${binaryName.replace('.', '/')}.class")
 

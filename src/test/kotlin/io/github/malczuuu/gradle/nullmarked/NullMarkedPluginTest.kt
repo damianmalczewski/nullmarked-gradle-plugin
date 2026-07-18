@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.gradle.jspecify
+package io.github.malczuuu.gradle.nullmarked
 
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
@@ -25,7 +25,7 @@ import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class JSpecifyPluginTest {
+class NullMarkedPluginTest {
 
   private lateinit var project: Project
 
@@ -36,7 +36,7 @@ class JSpecifyPluginTest {
 
   private fun applyPlugins() {
     project.plugins.apply("java")
-    project.plugins.apply("io.github.malczuuu.gradle-jspecify")
+    project.plugins.apply("io.github.malczuuu.nullmarked")
   }
 
   private fun compileOnlyJSpecifyDependencies(): List<String> {
@@ -54,10 +54,10 @@ class JSpecifyPluginTest {
   fun `registers extension with defaults`() {
     applyPlugins()
 
-    val extension = project.extensions.getByType(JSpecifyExtension::class.java)
+    val extension = project.extensions.getByType(NullMarkedExtension::class.java)
 
     assertThat(extension.generatePackageInfo.get()).isTrue()
-    assertThat(extension.jspecifyVersion.get()).isEqualTo(JSpecifyPlugin.DEFAULT_JSPECIFY_VERSION)
+    assertThat(extension.jspecifyVersion.get()).isEqualTo(NullMarkedPlugin.DEFAULT_JSPECIFY_VERSION)
   }
 
   @Test
@@ -71,10 +71,10 @@ class JSpecifyPluginTest {
 
   @Test
   fun `does not register task without the java plugin`() {
-    project.plugins.apply("io.github.malczuuu.gradle-jspecify")
+    project.plugins.apply("io.github.malczuuu.nullmarked")
 
     assertThat(project.tasks.findByName("generatePackageInfo")).isNull()
-    assertThat(project.extensions.findByType(JSpecifyExtension::class.java)).isNotNull()
+    assertThat(project.extensions.findByType(NullMarkedExtension::class.java)).isNotNull()
   }
 
   @Test
@@ -86,7 +86,7 @@ class JSpecifyPluginTest {
             .getByType(JavaPluginExtension::class.java)
             .sourceSets
             .getByName(SourceSet.MAIN_SOURCE_SET_NAME)
-    val expected = project.layout.buildDirectory.dir("generated/sources/jspecify/java/main").get().asFile
+    val expected = project.layout.buildDirectory.dir("generated/sources/nullmarked/java/main").get().asFile
 
     assertThat(mainSourceSet.java.srcDirs).contains(expected)
   }
@@ -108,13 +108,13 @@ class JSpecifyPluginTest {
     applyPlugins()
 
     assertThat(compileOnlyJSpecifyDependencies())
-        .containsExactly("org.jspecify:jspecify:${JSpecifyPlugin.DEFAULT_JSPECIFY_VERSION}")
+        .containsExactly("org.jspecify:jspecify:${NullMarkedPlugin.DEFAULT_JSPECIFY_VERSION}")
   }
 
   @Test
   fun `respects configured jspecifyVersion`() {
     applyPlugins()
-    project.extensions.getByType(JSpecifyExtension::class.java).jspecifyVersion.set("0.9.0")
+    project.extensions.getByType(NullMarkedExtension::class.java).jspecifyVersion.set("0.9.0")
 
     assertThat(compileOnlyJSpecifyDependencies()).containsExactly("org.jspecify:jspecify:0.9.0")
   }
@@ -138,7 +138,7 @@ class JSpecifyPluginTest {
   @Test
   fun `does not add dependency when user declares jspecify in api`() {
     project.plugins.apply("java-library")
-    project.plugins.apply("io.github.malczuuu.gradle-jspecify")
+    project.plugins.apply("io.github.malczuuu.nullmarked")
     project.dependencies.add("api", "org.jspecify:jspecify:0.3.0")
 
     assertThat(compileOnlyJSpecifyDependencies()).isEmpty()

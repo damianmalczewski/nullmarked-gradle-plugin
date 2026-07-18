@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.gradle.jspecify
+package io.github.malczuuu.gradle.nullmarked
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -27,14 +27,14 @@ import org.gradle.api.tasks.SourceSet
  * Applies JSpecify conventions to a Java project:
  *
  * - generates a `@NullMarked` `package-info.java` for every non-empty package of the `main` source set that does not
- *   declare one (configurable via the `jspecify` extension),
+ *   declare one (configurable via the `nullmarked` extension),
  * - adds `org.jspecify:jspecify` as a `compileOnly` dependency unless the build script declares a JSpecify dependency
  *   itself.
  */
-class JSpecifyPlugin : Plugin<Project> {
+class NullMarkedPlugin : Plugin<Project> {
 
   override fun apply(project: Project) {
-    val extension = project.extensions.create("jspecify", JSpecifyExtension::class.java)
+    val extension = project.extensions.create("nullmarked", NullMarkedExtension::class.java)
     extension.generatePackageInfo.convention(true)
     extension.jspecifyVersion.convention(DEFAULT_JSPECIFY_VERSION)
 
@@ -44,14 +44,14 @@ class JSpecifyPlugin : Plugin<Project> {
     }
   }
 
-  private fun configurePackageInfoGeneration(project: Project, extension: JSpecifyExtension) {
+  private fun configurePackageInfoGeneration(project: Project, extension: NullMarkedExtension) {
     val mainSourceSet =
         project.extensions
             .getByType(JavaPluginExtension::class.java)
             .sourceSets
             .getByName(SourceSet.MAIN_SOURCE_SET_NAME)
 
-    val outputDir = project.layout.buildDirectory.dir("generated/sources/jspecify/java/${mainSourceSet.name}")
+    val outputDir = project.layout.buildDirectory.dir("generated/sources/nullmarked/java/${mainSourceSet.name}")
 
     val generateTask =
         project.tasks.register(TASK_NAME, GeneratePackageInfoTask::class.java) {
@@ -67,7 +67,7 @@ class JSpecifyPlugin : Plugin<Project> {
     mainSourceSet.java.srcDir(generateTask.flatMap(GeneratePackageInfoTask::outputDirectory))
   }
 
-  private fun configureDefaultDependency(project: Project, extension: JSpecifyExtension) {
+  private fun configureDefaultDependency(project: Project, extension: NullMarkedExtension) {
     project.configurations.getByName(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME).withDependencies {
       if (jspecifyDeclaredIn(this)) {
         return@withDependencies
