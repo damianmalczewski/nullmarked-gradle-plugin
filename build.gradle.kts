@@ -3,7 +3,9 @@ import com.diffplug.spotless.kotlin.KtfmtStep
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.gradle.plugin.compatibility.compatibility
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     jacoco
@@ -170,6 +172,16 @@ spotless {
     }
 }
 
+tasks.named<JavaCompile>("compileJava").configure {
+    options.release = 8
+}
+
+tasks.named<KotlinCompile>("compileKotlin").configure {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_1_8
+    }
+}
+
 tasks.withType<Test>().configureEach {
     testLogging {
         events(
@@ -182,13 +194,13 @@ tasks.withType<Test>().configureEach {
     }
 }
 
-tasks.named<Test>("integrationTest") {
+tasks.named<Test>("integrationTest").configure {
     providers.gradleProperty("compat.gradle.version").orNull?.let {
         systemProperty("compat.gradle.version", it)
     }
 }
 
-tasks.named<JacocoReport>("jacocoTestReport") {
+tasks.named<JacocoReport>("jacocoTestReport").configure {
     dependsOn(tasks.named("test"))
 
     reports {
@@ -198,7 +210,7 @@ tasks.named<JacocoReport>("jacocoTestReport") {
     }
 }
 
-tasks.named<Task>("check") {
+tasks.named<Task>("check").configure {
     finalizedBy(tasks.named("jacocoTestReport"))
 }
 
