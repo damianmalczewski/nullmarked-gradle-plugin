@@ -18,6 +18,7 @@ package io.github.malczuuu.gradle.nullmarked
 
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
+import org.gradle.kotlin.dsl.register
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -40,7 +41,7 @@ class GeneratePackageInfoTaskTest {
     outputDir = testProject.file("build/generated-package-info")
     task =
         project.tasks
-            .register("generatePackageInfo", GeneratePackageInfoTask::class.java) {
+            .register<GeneratePackageInfoTask>("generatePackageInfo") {
               sourceDirectories.from(sourceDir)
               outputDirectory.set(outputDir)
             }

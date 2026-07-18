@@ -21,6 +21,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.SourceSet
+import org.gradle.kotlin.dsl.findByType
+import org.gradle.kotlin.dsl.getByName
+import org.gradle.kotlin.dsl.getByType
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -54,7 +57,7 @@ class NullMarkedPluginTest {
   fun `registers extension with defaults`() {
     applyPlugins()
 
-    val extension = project.extensions.getByType(NullMarkedExtension::class.java)
+    val extension = project.extensions.getByType<NullMarkedExtension>()
 
     assertThat(extension.enabled.get()).isTrue()
     assertThat(extension.jspecifyVersion.get()).isEqualTo(NullMarkedPlugin.DEFAULT_JSPECIFY_VERSION)
@@ -74,7 +77,7 @@ class NullMarkedPluginTest {
     project.plugins.apply("io.github.malczuuu.nullmarked")
 
     assertThat(project.tasks.findByName("generatePackageInfo")).isNull()
-    assertThat(project.extensions.findByType(NullMarkedExtension::class.java)).isNotNull()
+    assertThat(project.extensions.findByType<NullMarkedExtension>()).isNotNull()
   }
 
   @Test
@@ -82,10 +85,7 @@ class NullMarkedPluginTest {
     applyPlugins()
 
     val mainSourceSet =
-        project.extensions
-            .getByType(JavaPluginExtension::class.java)
-            .sourceSets
-            .getByName(SourceSet.MAIN_SOURCE_SET_NAME)
+        project.extensions.getByType<JavaPluginExtension>().sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
     val expected = project.layout.buildDirectory.dir("generated/sources/nullmarked/java/main").get().asFile
 
     assertThat(mainSourceSet.java.srcDirs).contains(expected)
@@ -95,7 +95,7 @@ class NullMarkedPluginTest {
   fun `task scans only hand-written source directories`() {
     applyPlugins()
 
-    val task = project.tasks.getByName("generatePackageInfo") as GeneratePackageInfoTask
+    val task = project.tasks.getByName<GeneratePackageInfoTask>("generatePackageInfo")
     val generatedDir = task.outputDirectory.get().asFile
 
     assertThat(task.sourceDirectories.files)
@@ -114,7 +114,7 @@ class NullMarkedPluginTest {
   @Test
   fun `respects configured jspecifyVersion`() {
     applyPlugins()
-    project.extensions.getByType(NullMarkedExtension::class.java).jspecifyVersion.set("0.9.0")
+    project.extensions.getByType<NullMarkedExtension>().jspecifyVersion.set("0.9.0")
 
     assertThat(compileOnlyJSpecifyDependencies()).containsExactly("org.jspecify:jspecify:0.9.0")
   }

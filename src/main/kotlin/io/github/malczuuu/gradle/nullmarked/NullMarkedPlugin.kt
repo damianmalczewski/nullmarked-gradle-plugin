@@ -22,9 +22,13 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.SourceSet
+import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.getByType
+import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.withType
 
 /**
- * Applies JSpecify conventions to a Java project:
+ * Applies JSpecify's `NullMarked` convention to a Java project:
  *
  * - generates a `@NullMarked` `package-info.java` for every non-empty package of the `main` source set that does not
  *   declare one (configurable via the `nullmarked` extension),
@@ -34,12 +38,12 @@ import org.gradle.api.tasks.SourceSet
 open class NullMarkedPlugin : Plugin<Project> {
 
   override fun apply(project: Project) {
-    val extension = project.extensions.create("nullmarked", NullMarkedExtension::class.java)
+    val extension = project.extensions.create<NullMarkedExtension>("nullmarked")
     extension.enabled.convention(true)
     extension.excludedPackages.convention(emptyList())
     extension.jspecifyVersion.convention(DEFAULT_JSPECIFY_VERSION)
 
-    project.plugins.withType(JavaPlugin::class.java) {
+    project.plugins.withType<JavaPlugin> {
       configurePackageInfoGeneration(project, extension)
       configureDefaultDependency(project, extension)
     }
@@ -47,15 +51,12 @@ open class NullMarkedPlugin : Plugin<Project> {
 
   private fun configurePackageInfoGeneration(project: Project, extension: NullMarkedExtension) {
     val mainSourceSet =
-        project.extensions
-            .getByType(JavaPluginExtension::class.java)
-            .sourceSets
-            .getByName(SourceSet.MAIN_SOURCE_SET_NAME)
+        project.extensions.getByType<JavaPluginExtension>().sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
 
     val outputDir = project.layout.buildDirectory.dir("generated/sources/nullmarked/java/${mainSourceSet.name}")
 
     val generateTask =
-        project.tasks.register(TASK_NAME, GeneratePackageInfoTask::class.java) {
+        project.tasks.register<GeneratePackageInfoTask>(TASK_NAME) {
           group = "generation"
           description = "Generates @NullMarked package-info.java files for packages missing them."
 

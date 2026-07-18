@@ -1,6 +1,6 @@
 # Gradle NullMarked Plugin
 
-Gradle plugin applying [JSpecify](https://jspecify.dev/)'s `@NullMarked` conventions to Java projects.
+Gradle plugin applying [JSpecify](https://jspecify.dev/)'s `@NullMarked` convention to Java projects.
 
 ## What it does
 
