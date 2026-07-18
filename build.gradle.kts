@@ -114,6 +114,39 @@ gradlePlugin {
     }
 }
 
+publishing {
+    publications.withType<MavenPublication>().configureEach {
+        pom {
+            name = "Gradle NullMarked Plugin"
+            description = "Generates @NullMarked-annotated package-info.java for packages missing it."
+            url = "https://github.com/damianmalczewski/gradle-nullmarked-plugin"
+            inceptionYear = "2026"
+            licenses {
+                license {
+                    name = "The Apache License, Version 2.0"
+                    url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+                }
+            }
+            developers {
+                developer {
+                    id = "damianmalczewski"
+                    name = "Damian Malczewski"
+                    url = "https://github.com/damianmalczewski"
+                }
+            }
+            scm {
+                connection = "scm:git:git://github.com/damianmalczewski/gradle-nullmarked-plugin.git"
+                developerConnection = "scm:git:ssh://github.com/damianmalczewski/gradle-nullmarked-plugin.git"
+                url = "https://github.com/damianmalczewski/gradle-nullmarked-plugin"
+            }
+            issueManagement {
+                system = "GitHub Issues"
+                url = "https://github.com/damianmalczewski/gradle-nullmarked-plugin/issues"
+            }
+        }
+    }
+}
+
 spotless {
     kotlin {
         target("**/src/**/*.kt")
