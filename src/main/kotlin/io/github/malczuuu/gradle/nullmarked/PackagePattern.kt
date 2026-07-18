@@ -33,7 +33,7 @@ internal class PackagePattern private constructor(private val regex: Regex) {
     private val VALID_IDENTIFIER = Regex("""(\.\.)?[\w*]+((\.|\.\.)[\w*]+)*(\.\.)?|\.\.""")
 
     fun of(identifier: String): PackagePattern {
-      require(VALID_IDENTIFIER.matches(identifier)) { "Invalid package identifier '$identifier'" }
+      require(VALID_IDENTIFIER.matches(identifier)) { "Invalid package identifier '$identifier' [nullmarked plugin]." }
       return PackagePattern(Regex(toRegex(identifier)))
     }
 
