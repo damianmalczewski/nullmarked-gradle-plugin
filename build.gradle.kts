@@ -101,7 +101,7 @@ gradlePlugin {
     website = "https://github.com/damianmalczewski/gradle-nullmarked-plugin"
     vcsUrl = "https://github.com/damianmalczewski/gradle-nullmarked-plugin.git"
     plugins {
-        create("gradle-nullmarked") {
+        create("nullmarked") {
             id = "io.github.malczuuu.nullmarked"
             implementationClass = "io.github.malczuuu.gradle.nullmarked.NullMarkedPlugin"
             displayName = "Gradle NullMarked Plugin"
@@ -149,9 +149,20 @@ publishing {
     }
 }
 
+if (getBooleanProperty("sign")) {
+    signing {
+        useInMemoryPgpKeys(System.getenv("SIGNING_KEY"), System.getenv("SIGNING_PASSWORD"))
+        sign(publishing.publications)
+    }
+} else {
+    tasks.withType<Sign>().configureEach {
+        enabled = false
+    }
+}
+
 spotless {
     kotlin {
-        target("**/src/**/*.kt")
+        target("src/**/*.kt")
         licenseHeaderFile("${rootProject.rootDir}/gradle/license-header.kt")
 
         ktfmt("0.64").metaStyle().configure {
@@ -202,7 +213,6 @@ tasks.named<Test>("integrationTest").configure {
 
 tasks.named<JacocoReport>("jacocoTestReport").configure {
     dependsOn(tasks.named("test"))
-
     reports {
         xml.required = true
         html.required = true
@@ -221,3 +231,6 @@ tasks.register("allTest") {
 }
 
 defaultTasks("spotlessApply", "build")
+
+fun getBooleanProperty(name: String, defaultValue: Boolean = false): Boolean =
+    if (hasProperty(name)) findProperty(name)?.toString() != "false" else defaultValue
