@@ -1,0 +1,150 @@
+/*
+ * Copyright 2026-current Damian Malczewski
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.github.malczuuu.gradle.jspecify
+
+import java.io.File
+import org.assertj.core.api.Assertions.assertThat
+import org.gradle.testfixtures.ProjectBuilder
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+
+class GeneratePackageInfoTaskTest {
+
+  @TempDir lateinit var projectDir: File
+
+  private lateinit var testProject: TestProject
+  private lateinit var sourceDir: File
+  private lateinit var outputDir: File
+  private lateinit var task: GeneratePackageInfoTask
+
+  @BeforeEach
+  fun beforeEach() {
+    val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
+    testProject = TestProject(projectDir)
+    sourceDir = testProject.file("src/main/java").apply { mkdirs() }
+    outputDir = testProject.file("build/generated-package-info")
+    task =
+        project.tasks
+            .register("generatePackageInfo", GeneratePackageInfoTask::class.java) {
+              sourceDirectories.from(sourceDir)
+              outputDirectory.set(outputDir)
+            }
+            .get()
+  }
+
+  private fun writeSource(relativePath: String, content: String = "class Placeholder {}") {
+    testProject.writeSource(relativePath, content)
+  }
+
+  private fun generatedPackageInfo(packageName: String): File = TestProject.packageInfoUnder(outputDir, packageName)
+
+  @Test
+  fun `generates package-info for packages containing java files`() {
+    writeSource("com/acme/Foo.java")
+    writeSource("com/acme/util/Util.java")
+
+    task.generate()
+
+    assertThat(generatedPackageInfo("com.acme")).exists()
+    assertThat(generatedPackageInfo("com.acme.util")).exists()
+  }
+
+  @Test
+  fun `generated file contains NullMarked, Generated and package declaration`() {
+    writeSource("com/acme/Foo.java")
+
+    task.generate()
+
+    val content = generatedPackageInfo("com.acme").readText()
+    assertThat(content)
+        .contains("@NullMarked")
+        .contains("package com.acme;")
+        .contains("import org.jspecify.annotations.NullMarked;")
+        .contains("import javax.annotation.processing.Generated;")
+        .contains("value = \"io.github.malczuuu.gradle-jspecify\"")
+        .containsPattern("date = \"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}[+-Z]")
+  }
+
+  @Test
+  fun `skips packages with hand-written package-info`() {
+    writeSource("com/acme/Foo.java")
+    writeSource("com/acme/package-info.java", "package com.acme;")
+
+    task.generate()
+
+    assertThat(generatedPackageInfo("com.acme")).doesNotExist()
+  }
+
+  @Test
+  fun `skips the default package`() {
+    writeSource("TopLevel.java")
+
+    task.generate()
+
+    assertThat(File(outputDir, "package-info.java")).doesNotExist()
+  }
+
+  @Test
+  fun `skips intermediate directories without java files`() {
+    writeSource("com/acme/deep/Foo.java")
+
+    task.generate()
+
+    assertThat(generatedPackageInfo("com.acme.deep")).exists()
+    assertThat(generatedPackageInfo("com.acme")).doesNotExist()
+    assertThat(generatedPackageInfo("com")).doesNotExist()
+  }
+
+  @Test
+  fun `ignores non-java files`() {
+    writeSource("com/acme/notes.txt", "not java")
+
+    task.generate()
+
+    assertThat(generatedPackageInfo("com.acme")).doesNotExist()
+  }
+
+  @Test
+  fun `removes stale output on regeneration`() {
+    writeSource("com/acme/Foo.java")
+    task.generate()
+    assertThat(generatedPackageInfo("com.acme")).exists()
+
+    File(sourceDir, "com/acme/Foo.java").delete()
+    writeSource("com/other/Bar.java")
+    task.generate()
+
+    assertThat(generatedPackageInfo("com.acme")).doesNotExist()
+    assertThat(generatedPackageInfo("com.other")).exists()
+  }
+
+  @Test
+  fun `merges packages across multiple source directories`() {
+    val secondSourceDir = File(projectDir, "src/main/java-extra").apply { mkdirs() }
+    task.sourceDirectories.from(secondSourceDir)
+    writeSource("com/acme/Foo.java")
+    File(secondSourceDir, "com/acme/package-info.java").apply {
+      parentFile.mkdirs()
+      writeText("package com.acme;")
+    }
+
+    task.generate()
+
+    assertThat(generatedPackageInfo("com.acme")).doesNotExist()
+  }
+}
