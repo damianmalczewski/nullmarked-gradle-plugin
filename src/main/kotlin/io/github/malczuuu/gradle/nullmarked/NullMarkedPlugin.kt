@@ -40,6 +40,7 @@ open class NullMarkedPlugin : Plugin<Project> {
   override fun apply(project: Project) {
     val extension = project.extensions.create<NullMarkedExtension>("nullmarked")
     extension.enabled.convention(true)
+    extension.headerEnabled.convention(true)
     extension.excludedPackages.convention(emptyList())
     extension.jspecifyVersion.convention(DEFAULT_JSPECIFY_VERSION)
 
@@ -67,6 +68,7 @@ open class NullMarkedPlugin : Plugin<Project> {
 
           sourceDirectories.from(inputDirFiles)
           generationEnabled.set(extension.enabled)
+          headerEnabled.set(extension.headerEnabled)
           excludedPackages.set(extension.excludedPackages)
 
           outputDirectory.set(outputDir)
