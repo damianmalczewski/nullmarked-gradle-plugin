@@ -91,8 +91,26 @@ class NullMarkedPluginFunctionalTest {
 
     val result = project.runner("compileJava").build()
 
-    assertThat(result.task(":generatePackageInfo")?.outcome).isEqualTo(TaskOutcome.SKIPPED)
+    assertThat(result.task(":generatePackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(project.generatedPackageInfo("com.acme")).doesNotExist()
     assertThat(result.task(":compileJava")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+  }
+
+  @Test
+  fun `disabling generation removes previously generated files`() {
+    project.runner("generatePackageInfo").build()
+    assertThat(project.generatedPackageInfo("com.acme")).exists()
+
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            enabled = false
+        }
+        """
+    )
+    val result = project.runner("generatePackageInfo").build()
+
+    assertThat(result.task(":generatePackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(project.generatedPackageInfo("com.acme")).doesNotExist()
   }
 }

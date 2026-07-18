@@ -83,9 +83,8 @@ gradlePlugin {
         create("gradle-nullmarked") {
             id = "io.github.malczuuu.nullmarked"
             implementationClass = "io.github.malczuuu.gradle.nullmarked.NullMarkedPlugin"
-            displayName = "NullMarked Gradle Plugin"
-            description =
-                "Generates @NullMarked package-info.java for packages missing it and adds the JSpecify annotations as a compileOnly dependency."
+            displayName = "Gradle NullMarked Plugin"
+            description = "Generates @NullMarked-annotated package-info.java for packages missing it."
             compatibility {
                 features {
                     configurationCache = true

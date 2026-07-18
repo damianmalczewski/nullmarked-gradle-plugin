@@ -45,7 +45,7 @@ Configuration (all optional):
 
 ```kotlin
 nullmarked {
-    enabled = true             // default; set false to disable generation
+    enabled = true             // default; false disables generation
     jspecifyVersion = "1.0.0"  // version of the auto-added org.jspecify:jspecify dependency
 }
 ```

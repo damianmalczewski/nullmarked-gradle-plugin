@@ -31,7 +31,7 @@ import org.gradle.api.tasks.SourceSet
  * - adds `org.jspecify:jspecify` as a `compileOnly` dependency unless the build script declares a JSpecify dependency
  *   itself.
  */
-class NullMarkedPlugin : Plugin<Project> {
+open class NullMarkedPlugin : Plugin<Project> {
 
   override fun apply(project: Project) {
     val extension = project.extensions.create("nullmarked", NullMarkedExtension::class.java)
@@ -61,7 +61,7 @@ class NullMarkedPlugin : Plugin<Project> {
           // Scan only the hand-written source directories, not our own output.
           val outputDirFile = outputDir.get().asFile
           sourceDirectories.from(project.provider { mainSourceSet.java.srcDirs - outputDirFile })
-          onlyIf { extension.enabled.get() }
+          generationEnabled.set(extension.enabled)
         }
 
     mainSourceSet.java.srcDir(generateTask.flatMap(GeneratePackageInfoTask::outputDirectory))
@@ -74,28 +74,30 @@ class NullMarkedPlugin : Plugin<Project> {
       }
       val declaredElsewhere =
           listOf(
-                  JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME,
                   JavaPlugin.API_CONFIGURATION_NAME,
                   JavaPlugin.COMPILE_ONLY_API_CONFIGURATION_NAME,
+                  JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME,
+                  JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME,
               )
               .any { name ->
                 val configuration = project.configurations.findByName(name)
                 configuration != null && jspecifyDeclaredIn(configuration.dependencies)
               }
       if (!declaredElsewhere) {
-        add(project.dependencies.create("$JSPECIFY_GROUP:jspecify:${extension.jspecifyVersion.get()}"))
+        add(project.dependencies.create("$JSPECIFY_GROUP:$JSPECIFY_NAME:${extension.jspecifyVersion.get()}"))
       }
     }
   }
 
   private fun jspecifyDeclaredIn(dependencies: Iterable<Dependency>): Boolean = dependencies.any {
-    it.group == JSPECIFY_GROUP
+    it.group == JSPECIFY_GROUP && it.name == JSPECIFY_NAME
   }
 
   companion object {
     const val DEFAULT_JSPECIFY_VERSION = "1.0.0"
 
     private const val JSPECIFY_GROUP = "org.jspecify"
+    private const val JSPECIFY_NAME = "jspecify"
     private const val TASK_NAME = "generatePackageInfo"
   }
 }
