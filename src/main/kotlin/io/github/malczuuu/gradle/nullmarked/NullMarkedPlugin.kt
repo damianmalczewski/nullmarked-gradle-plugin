@@ -36,6 +36,7 @@ open class NullMarkedPlugin : Plugin<Project> {
   override fun apply(project: Project) {
     val extension = project.extensions.create("nullmarked", NullMarkedExtension::class.java)
     extension.enabled.convention(true)
+    extension.excludedPackages.convention(emptyList())
     extension.jspecifyVersion.convention(DEFAULT_JSPECIFY_VERSION)
 
     project.plugins.withType(JavaPlugin::class.java) {
@@ -57,11 +58,17 @@ open class NullMarkedPlugin : Plugin<Project> {
         project.tasks.register(TASK_NAME, GeneratePackageInfoTask::class.java) {
           group = "generation"
           description = "Generates @NullMarked package-info.java files for packages missing them."
-          outputDirectory.set(outputDir)
-          // Scan only the hand-written source directories, not our own output.
+
           val outputDirFile = outputDir.get().asFile
-          sourceDirectories.from(project.provider { mainSourceSet.java.srcDirs - outputDirFile })
+
+          // Scan only the hand-written source directories, not our own output.
+          val inputDirFiles = project.provider { mainSourceSet.java.srcDirs - outputDirFile }
+
+          sourceDirectories.from(inputDirFiles)
           generationEnabled.set(extension.enabled)
+          excludedPackages.set(extension.excludedPackages)
+
+          outputDirectory.set(outputDir)
         }
 
     mainSourceSet.java.srcDir(generateTask.flatMap(GeneratePackageInfoTask::outputDirectory))

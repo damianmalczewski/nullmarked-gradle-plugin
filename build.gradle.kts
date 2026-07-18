@@ -6,10 +6,13 @@ import org.gradle.plugin.compatibility.compatibility
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
+    jacoco
     `kotlin-dsl`
     `maven-publish`
+    signing
     id("com.diffplug.spotless") version "8.8.0"
     id("org.gradle.plugin-compatibility") version "1.0.0"
+    id("com.gradle.plugin-publish") version "2.1.1"
 }
 
 java {
@@ -42,17 +45,15 @@ dependencies {
 
 testing {
     suites {
-        val test by getting(JvmTestSuite::class) {
+        val test = getByName<JvmTestSuite>("test") {
             useJUnitJupiter()
         }
-
-        val integrationTest by registering(JvmTestSuite::class) {
+        register<JvmTestSuite>("integrationTest") {
             useJUnitJupiter()
-
             targets {
                 all {
                     testTask.configure {
-                        shouldRunAfter(tasks.test)
+                        shouldRunAfter(test)
                     }
                 }
             }
@@ -60,11 +61,11 @@ testing {
     }
 }
 
-val integrationTestImplementation by configurations.getting {
+configurations.getByName("integrationTestImplementation") {
     extendsFrom(configurations.testImplementation.get())
 }
 
-val integrationTestRuntimeOnly by configurations.getting {
+configurations.getByName("integrationTestRuntimeOnly") {
     extendsFrom(configurations.testRuntimeOnly.get())
 }
 
@@ -73,18 +74,37 @@ sourceSets["integrationTest"].apply {
     runtimeClasspath += sourceSets["main"].output + sourceSets["test"].output
 }
 
+val generatePluginProperties = tasks.register("generatePluginProperties") {
+    group = "generation"
+    description = "Generates plugin.properties with plugin local metadata."
+
+    val pluginVersion = version.toString()
+    val outputDir = layout.buildDirectory.dir("generated/resources/plugin-properties")
+
+    inputs.property("version", pluginVersion)
+    outputs.dir(outputDir)
+
+    doLast {
+        outputDir.get().file("io/github/malczuuu/gradle/nullmarked/plugin.properties").asFile.apply {
+            parentFile.mkdirs()
+            writeText("version=$pluginVersion\n")
+        }
+    }
+}
+
+sourceSets["main"].resources.srcDir(generatePluginProperties)
+
 gradlePlugin {
     testSourceSets(sourceSets["test"], sourceSets["integrationTest"])
-
     website = "https://github.com/damianmalczewski/gradle-nullmarked-plugin"
-    vcsUrl = "https://github.com/damianmalczewski/gradle-nullmarked-plugin"
-
+    vcsUrl = "https://github.com/damianmalczewski/gradle-nullmarked-plugin.git"
     plugins {
         create("gradle-nullmarked") {
             id = "io.github.malczuuu.nullmarked"
             implementationClass = "io.github.malczuuu.gradle.nullmarked.NullMarkedPlugin"
             displayName = "Gradle NullMarked Plugin"
             description = "Generates @NullMarked-annotated package-info.java for packages missing it."
+            tags = listOf("JSpecify", "NullMarked", "package-info.java")
             compatibility {
                 features {
                     configurationCache = true
@@ -107,7 +127,6 @@ spotless {
         endWithNewline()
         lineEndings = LineEnding.UNIX
     }
-
     kotlinGradle {
         target("**/*.gradle.kts")
         targetExclude("**/build/**")
@@ -119,7 +138,6 @@ spotless {
 }
 
 tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
     testLogging {
         events(
             TestLogEvent.PASSED,
@@ -135,6 +153,20 @@ tasks.named<Test>("integrationTest") {
     providers.gradleProperty("compat.gradle.version").orNull?.let {
         systemProperty("compat.gradle.version", it)
     }
+}
+
+tasks.named<JacocoReport>("jacocoTestReport") {
+    dependsOn(tasks.named("test"))
+
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+}
+
+tasks.named<Task>("check") {
+    finalizedBy(tasks.named("jacocoTestReport"))
 }
 
 tasks.register("allTest") {

@@ -97,6 +97,22 @@ class NullMarkedPluginFunctionalTest {
   }
 
   @Test
+  fun `excluded packages are skipped during generation`() {
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            excludedPackages = listOf("com.acme..")
+        }
+        """
+    )
+
+    val result = project.runner("generatePackageInfo").build()
+
+    assertThat(result.task(":generatePackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(project.generatedPackageInfo("com.acme")).doesNotExist()
+  }
+
+  @Test
   fun `disabling generation removes previously generated files`() {
     project.runner("generatePackageInfo").build()
     assertThat(project.generatedPackageInfo("com.acme")).exists()

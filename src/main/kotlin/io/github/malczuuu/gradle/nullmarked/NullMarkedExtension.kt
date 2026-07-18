@@ -16,6 +16,7 @@
 
 package io.github.malczuuu.gradle.nullmarked
 
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 
 /** Configuration for the NullMarked plugin, available in build scripts as `nullmarked { ... }`. */
@@ -26,6 +27,14 @@ abstract class NullMarkedExtension {
    * not declare one. Defaults to `true`.
    */
   abstract val enabled: Property<Boolean>
+
+  /**
+   * Package identifiers excluded from `package-info.java` generation, following ArchUnit's package identifier syntax:
+   * `org.acme` excludes only `org.acme`, `org.acme..` excludes `org.acme` and all its subpackages, `..internal..`
+   * excludes any package containing an `internal` segment, `*` matches within a single segment. Defaults to an empty
+   * list.
+   */
+  abstract val excludedPackages: ListProperty<String>
 
   /**
    * Version of the `org.jspecify:jspecify` artifact added as a `compileOnly` dependency when the build script does not

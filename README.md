@@ -47,8 +47,16 @@ Configuration (all optional):
 nullmarked {
     enabled = true             // default; false disables generation
     jspecifyVersion = "1.0.0"  // version of the auto-added org.jspecify:jspecify dependency
+    excludedPackages = listOf() // package identifiers excluded from generation
 }
 ```
+
+`excludedPackages` follows [ArchUnit's package identifier syntax](https://www.archunit.org/userguide/html/000_Index.html):
+
+- `org.acme` excludes only `org.acme`, 
+- `org.acme..` excludes `org.acme` and all its subpackages,
+- `..internal..` excludes any package containing an `internal` segment,
+- `*` matches within a single segment.
 
 ## Building
 
