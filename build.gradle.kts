@@ -2,12 +2,14 @@ import com.diffplug.spotless.LineEnding
 import com.diffplug.spotless.kotlin.KtfmtStep
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.gradle.plugin.compatibility.compatibility
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     `kotlin-dsl`
     `maven-publish`
     id("com.diffplug.spotless") version "8.8.0"
+    id("org.gradle.plugin-compatibility") version "1.0.0"
 }
 
 java {
@@ -81,6 +83,11 @@ gradlePlugin {
             displayName = "JSpecify Gradle Plugin"
             description =
                 "Generates @NullMarked package-info.java for packages missing it and adds the JSpecify annotations as a compileOnly dependency."
+            compatibility {
+                features {
+                    configurationCache = true
+                }
+            }
         }
     }
 }
