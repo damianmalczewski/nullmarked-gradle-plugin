@@ -45,9 +45,9 @@ Configuration (all optional):
 
 ```kotlin
 nullmarked {
-    enabled = true             // default; false disables generation
-    jspecifyVersion = "1.0.0"  // version of the auto-added org.jspecify:jspecify dependency
-    excludedPackages = listOf() // package identifiers excluded from generation
+    enabled = true               // default; false disables generation
+    jspecifyVersion = "1.0.0"    // version of the auto-added org.jspecify:jspecify dependency
+    excludedPackages = listOf()  // package identifiers excluded from generation
 }
 ```
 
@@ -62,5 +62,5 @@ nullmarked {
 
 ```sh
 ./gradlew build            # compiles the plugin and runs its unit tests
-./gradlew integrationTest  # TestKit compatibility test; -Pcompat.gradle.version=8.2 targets a specific Gradle
+./gradlew integrationTest  # TestKit compatibility test; -Pcompat.gradle.version=9.0.0 targets a specific Gradle
 ```
