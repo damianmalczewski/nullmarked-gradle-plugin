@@ -129,6 +129,12 @@ tasks.withType<Test>().configureEach {
     }
 }
 
+tasks.named<Test>("integrationTest") {
+    providers.gradleProperty("compat.gradle.version").orNull?.let {
+        systemProperty("compat.gradle.version", it)
+    }
+}
+
 tasks.register("allTest") {
     description = "Runs all tests (unit + integration)."
     group = "verification"

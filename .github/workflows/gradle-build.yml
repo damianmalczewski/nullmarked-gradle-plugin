@@ -56,11 +56,75 @@ jobs:
           restore-keys: |
             gradle-build-${{ runner.os }}-java-${{ matrix.java }}-
 
-      - name: Gradle Build
+      - name: Run Gradle Build
         env:
           GRADLE_OPTS: >-
             -Dorg.gradle.configuration-cache=false
             -Dorg.gradle.daemon=false
             -Dorg.gradle.parallel=false
             -Dorg.gradle.workers.max=1
-        run: ./gradlew build allTest
+        run: ./gradlew build
+
+  compatibility-test:
+    name: Compatibility Test (Gradle ${{ matrix.gradle }})
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        gradle:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+          - "8.5"
+          - "8.6"
+          - "8.7"
+          - "8.8"
+          - "8.9"
+          - "8.10"
+          - "8.11"
+          - "8.12"
+          - "8.13"
+          - "8.14"
+          - "9.0.0"
+          - "9.1.0"
+          - "9.2.0"
+          - "9.3.0"
+          - "9.4.0"
+          - "9.5.0"
+          - "9.6.0"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-disabled: true
+
+      - name: Cache Gradle
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-compat-${{ runner.os }}-gradle-${{ matrix.gradle }}-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-compat-${{ runner.os }}-gradle-${{ matrix.gradle }}-
+
+      - name: Run Compatibility Test
+        env:
+          GRADLE_OPTS: >-
+            -Dorg.gradle.configuration-cache=false
+            -Dorg.gradle.daemon=false
+            -Dorg.gradle.parallel=false
+            -Dorg.gradle.workers.max=1
+        run: ./gradlew integrationTest "-Pcompat.gradle.version=${{ matrix.gradle }}"

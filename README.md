@@ -54,5 +54,5 @@ jspecify {
 
 ```sh
 ./gradlew build            # compiles the plugin and runs its unit tests
-./gradlew integrationTest  # Gradle version compatibility matrix (TestKit, slow)
+./gradlew integrationTest  # TestKit compatibility test; -Pcompat.gradle.version=8.2 targets a specific Gradle
 ```

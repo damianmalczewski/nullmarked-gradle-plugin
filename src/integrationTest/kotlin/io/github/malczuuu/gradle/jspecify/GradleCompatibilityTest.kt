@@ -19,50 +19,28 @@ package io.github.malczuuu.gradle.jspecify
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.TaskOutcome
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
 
 /**
- * Runs the core plugin scenario against multiple Gradle versions (latest checked minor per line). Run via the
- * `integrationTest` suite.
+ * Runs the core plugin scenario against the Gradle version given by the `compat.gradle.version` system property
+ * (`-Pcompat.gradle.version=...` on the build; the CI workflow supplies it from its version matrix). Without the
+ * property, the current TestKit Gradle version is used. Run via the `integrationTest` suite.
  */
 class GradleCompatibilityTest {
 
   @TempDir lateinit var projectDir: File
 
-  @ParameterizedTest(name = "gradle {0}")
-  @ValueSource(
-      strings =
-          [
-              "8.2",
-              "8.3",
-              "8.4",
-              "8.5",
-              "8.6",
-              "8.7",
-              "8.8",
-              "8.9",
-              "8.10",
-              "8.11",
-              "8.12",
-              "8.13",
-              "8.14",
-              "9.0.0",
-              "9.1.0",
-              "9.2.0",
-              "9.3.0",
-              "9.4.0",
-              "9.5.0",
-              "9.6.0",
-          ]
-  )
-  fun `generates package-info, adds dependency and compiles`(gradleVersion: String) {
+  @Test
+  fun `generates package-info, adds dependency and compiles`() {
+    val gradleVersion: String? = System.getProperty("compat.gradle.version")
     val project = TestProject(projectDir)
     project.writeStandardBuild(rootProjectName = "compat-under-test")
     project.writeSampleSources()
 
-    val result = project.runner("compileJava").withGradleVersion(gradleVersion).build()
+    val runner = project.runner("compileJava")
+    gradleVersion?.let(runner::withGradleVersion)
+    val result = runner.build()
 
     assertThat(result.task(":generatePackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(result.task(":compileJava")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
