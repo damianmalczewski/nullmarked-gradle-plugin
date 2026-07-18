@@ -78,7 +78,7 @@ sourceSets["integrationTest"].apply {
 
 val generatePluginProperties = tasks.register("generatePluginProperties") {
     group = "generation"
-    description = "Generates plugin.properties with plugin local metadata."
+    description = "Generates nullmarked.properties with plugin local metadata."
 
     val pluginVersion = version.toString()
     val outputDir = layout.buildDirectory.dir("generated/resources/plugin-properties")
@@ -87,7 +87,7 @@ val generatePluginProperties = tasks.register("generatePluginProperties") {
     outputs.dir(outputDir)
 
     doLast {
-        outputDir.get().file("io/github/malczuuu/gradle/nullmarked/plugin.properties").asFile.apply {
+        outputDir.get().file("io/github/malczuuu/gradle/nullmarked/nullmarked.properties").asFile.apply {
             parentFile.mkdirs()
             writeText("version=$pluginVersion\n")
         }

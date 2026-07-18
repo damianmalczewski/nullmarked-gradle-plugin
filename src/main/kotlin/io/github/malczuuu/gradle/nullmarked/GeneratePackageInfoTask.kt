@@ -144,7 +144,7 @@ abstract class GeneratePackageInfoTask : DefaultTask() {
   companion object {
     /** Plugin version baked into the jar as a resource at build time; `unknown` if the resource is missing. */
     internal val PLUGIN_VERSION: String =
-        GeneratePackageInfoTask::class.java.getResourceAsStream("plugin.properties")?.use { stream ->
+        GeneratePackageInfoTask::class.java.getResourceAsStream("nullmarked.properties")?.use { stream ->
           Properties().apply { load(stream) }.getProperty("version")
         } ?: "unknown"
   }
