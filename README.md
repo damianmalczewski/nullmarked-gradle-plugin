@@ -1,5 +1,10 @@
 # Gradle NullMarked Plugin
 
+[![CI](https://github.com/damianmalczewski/gradle-nullmarked-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/damianmalczewski/gradle-nullmarked-plugin/actions/workflows/ci.yml)
+[![Codecov](https://codecov.io/gh/damianmalczewski/gradle-nullmarked-plugin/graph/badge.svg?token=6NQ031426J)](https://codecov.io/gh/damianmalczewski/gradle-nullmarked-plugin)
+[![Gradle Plugin Portal Version](https://img.shields.io/gradle-plugin-portal/v/io.github.malczuuu.nullmarked)](https://plugins.gradle.org/plugin/io.github.malczuuu.nullmarked)
+[![License](https://img.shields.io/badge/license-Apache%202.0-green)](https://github.com/damianmalczewski/gradle-nullmarked-plugin/blob/main/LICENSE)
+
 Gradle plugin applying [JSpecify](https://jspecify.dev/)'s `@NullMarked` convention to Java projects.
 
 ## Why bother with NullMarked Plugin
