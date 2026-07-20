@@ -28,7 +28,6 @@ kotlin {
         languageVersion = JavaLanguageVersion.of(17)
     }
     compilerOptions {
-        javaParameters = true
         apiVersion = KotlinVersion.KOTLIN_2_0
         languageVersion = KotlinVersion.KOTLIN_2_0
     }
@@ -184,11 +183,13 @@ spotless {
 }
 
 tasks.named<JavaCompile>("compileJava").configure {
+    options.compilerArgs.add("-parameters")
     options.release = 8
 }
 
 tasks.named<KotlinCompile>("compileKotlin").configure {
     compilerOptions {
+        javaParameters = true
         jvmTarget = JvmTarget.JVM_1_8
     }
 }
