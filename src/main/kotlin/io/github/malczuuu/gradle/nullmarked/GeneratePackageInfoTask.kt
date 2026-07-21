@@ -143,7 +143,5 @@ abstract class GeneratePackageInfoTask : DefaultTask() {
 
   private fun File.isPackageInfoDirty(content: String): Boolean = readText() != content
 
-  private fun rewritePackageInfo(existingFile: File, content: String) {
-    existingFile.writeText(content)
-  }
+  private fun rewritePackageInfo(existingFile: File, content: String) = existingFile.writeText(content)
 }
