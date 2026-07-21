@@ -26,10 +26,19 @@ package io.github.malczuuu.gradle.nullmarked
  */
 internal class PackagePattern private constructor(private val regex: Regex) {
 
+  /**
+   * @param packageName dotted package name to test, e.g. `org.acme.util`
+   * @return `true` if [packageName] matches this pattern
+   */
   fun matches(packageName: String): Boolean = regex.matches(packageName)
 
   companion object {
 
+    /**
+     * @param identifier package identifier in ArchUnit syntax (see class docs)
+     * @return a pattern matching package names described by [identifier]
+     * @throws IllegalArgumentException if [identifier] is not a valid package identifier
+     */
     fun of(identifier: String): PackagePattern {
       require(VALID_IDENTIFIER.matches(identifier)) { "Invalid package identifier '$identifier' [nullmarked plugin]." }
       return PackagePattern(Regex(toRegex(identifier)))

@@ -19,7 +19,7 @@ package io.github.malczuuu.gradle.nullmarked
 import java.util.Properties
 
 /** Default value of `nullmarked.jspecifyVersion` used when the build script does not configure one. */
-const val DEFAULT_JSPECIFY_VERSION = "1.0.0"
+internal const val JSPECIFY_VERSION = "1.0.0"
 
 /** Group of the default `org.jspecify:jspecify` dependency coordinate. */
 internal const val JSPECIFY_GROUP = "org.jspecify"

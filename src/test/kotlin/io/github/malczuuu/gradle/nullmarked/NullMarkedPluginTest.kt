@@ -61,7 +61,7 @@ class NullMarkedPluginTest {
     val extension = project.extensions.getByType<NullMarkedExtension>()
 
     assertThat(extension.enabled.get()).isTrue()
-    assertThat(extension.jspecifyVersion.get()).isEqualTo(DEFAULT_JSPECIFY_VERSION)
+    assertThat(extension.jspecifyVersion.get()).isEqualTo(JSPECIFY_VERSION)
   }
 
   @Test
@@ -108,7 +108,7 @@ class NullMarkedPluginTest {
   fun `adds jspecify as compileOnly dependency by default`() {
     applyPlugins()
 
-    assertThat(compileOnlyJSpecifyDependencies()).containsExactly("org.jspecify:jspecify:${DEFAULT_JSPECIFY_VERSION}")
+    assertThat(compileOnlyJSpecifyDependencies()).containsExactly("org.jspecify:jspecify:${JSPECIFY_VERSION}")
   }
 
   @Test

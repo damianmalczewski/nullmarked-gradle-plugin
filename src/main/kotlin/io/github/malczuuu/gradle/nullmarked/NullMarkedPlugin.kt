@@ -38,16 +38,21 @@ import org.gradle.kotlin.dsl.withType
  */
 open class NullMarkedPlugin : Plugin<Project> {
 
-  override fun apply(project: Project) {
-    val extension = project.extensions.create<NullMarkedExtension>("nullmarked")
+  /**
+   * Apply this plugin to the given target object.
+   *
+   * @param target The target object
+   */
+  override fun apply(target: Project) {
+    val extension = target.extensions.create<NullMarkedExtension>("nullmarked")
     extension.enabled.convention(true)
     extension.headerEnabled.convention(true)
     extension.excludedPackages.convention(emptyList())
-    extension.jspecifyVersion.convention(DEFAULT_JSPECIFY_VERSION)
+    extension.jspecifyVersion.convention(JSPECIFY_VERSION)
 
-    project.plugins.withType<JavaPlugin> {
-      configurePackageInfoGeneration(project, extension)
-      configureDefaultDependency(project, extension)
+    target.plugins.withType<JavaPlugin> {
+      configurePackageInfoGeneration(target, extension)
+      configureDefaultDependency(target, extension)
     }
   }
 

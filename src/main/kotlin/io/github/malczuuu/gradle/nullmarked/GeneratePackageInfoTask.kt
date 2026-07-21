@@ -36,6 +36,10 @@ import org.gradle.api.tasks.TaskAction
  * Scans the hand-written Java source directories of a source set and generates a `package-info.java` annotated with
  * `org.jspecify.annotations.NullMarked` for every package that contains at least one Java file but no
  * `package-info.java` of its own. When [generationEnabled] is `false`, only deletes previously generated output.
+ *
+ * Generation is incremental: on each run, only packages whose expected content changed are (re)written and only stale
+ * output (for packages that no longer need generation) is pruned, rather than wiping and regenerating the whole output
+ * directory.
  */
 @CacheableTask
 abstract class GeneratePackageInfoTask : DefaultTask() {
@@ -65,6 +69,11 @@ abstract class GeneratePackageInfoTask : DefaultTask() {
   /** Directory the generated `package-info.java` files are written to. */
   @get:OutputDirectory abstract val outputDirectory: DirectoryProperty
 
+  /**
+   * Incrementally reconciles [outputDirectory] with what [sourceDirectories] currently require: writes only new or
+   * changed `package-info.java` files and prunes only those that are no longer needed, leaving up-to-date files
+   * untouched.
+   */
   @TaskAction
   fun generatePackageInfos() {
     val outputDir = outputDirectory.get().asFile
