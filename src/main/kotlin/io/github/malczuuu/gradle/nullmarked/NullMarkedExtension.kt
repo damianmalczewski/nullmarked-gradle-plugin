@@ -42,7 +42,7 @@ abstract class NullMarkedExtension {
   /**
    * Version of `org.jspecify:jspecify`, or a full `group:name:version` dependency notation (e.g. to use a fork), added
    * as a `compileOnly` dependency when the build script does not declare JSpecify itself. Defaults to
-   * [NullMarkedPlugin.DEFAULT_JSPECIFY_VERSION].
+   * [DEFAULT_JSPECIFY_VERSION].
    */
   abstract val jspecifyVersion: Property<String>
 }

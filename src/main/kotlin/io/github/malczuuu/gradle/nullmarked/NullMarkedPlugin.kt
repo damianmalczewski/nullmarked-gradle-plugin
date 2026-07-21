@@ -124,12 +124,4 @@ open class NullMarkedPlugin : Plugin<Project> {
   }
 
   private data class JSpecifyCoordinate(val group: String, val name: String, val version: String)
-
-  companion object {
-    const val DEFAULT_JSPECIFY_VERSION = "1.0.0"
-
-    private const val JSPECIFY_GROUP = "org.jspecify"
-    private const val JSPECIFY_NAME = "jspecify"
-    private const val TASK_NAME = "generatePackageInfo"
-  }
 }

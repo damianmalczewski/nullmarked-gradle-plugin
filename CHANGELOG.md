@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog][keepachangelog], and this project adhe
 
 - Add option to pass a full dependency to `jspecifyVersion` (to support forks if necessary).
 
+### Changed
+
+- Generate `package-info.java` files incrementally; only stale files are pruned and only changed/missing ones are
+  (re)written, instead of wiping and regenerating the whole output directory each run.
+
 ## [0.1.0] - 2026-07-18
 
 ### Added

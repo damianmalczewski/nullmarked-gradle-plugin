@@ -1,9 +1,9 @@
 # NullMarked Gradle Plugin
 
-[![CI](https://github.com/damianmalczewski/gradle-nullmarked-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/damianmalczewski/gradle-nullmarked-plugin/actions/workflows/ci.yml)
-[![Codecov](https://codecov.io/gh/damianmalczewski/gradle-nullmarked-plugin/graph/badge.svg?token=6NQ031426J)](https://codecov.io/gh/damianmalczewski/gradle-nullmarked-plugin)
+[![CI](https://github.com/damianmalczewski/nullmarked-gradle-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/damianmalczewski/nullmarked-gradle-plugin/actions/workflows/ci.yml)
+[![Codecov](https://codecov.io/gh/damianmalczewski/nullmarked-gradle-plugin/graph/badge.svg?token=6NQ031426J)](https://codecov.io/gh/damianmalczewski/nullmarked-gradle-plugin)
 [![Gradle Plugin Portal Version](https://img.shields.io/gradle-plugin-portal/v/io.github.malczuuu.nullmarked)](https://plugins.gradle.org/plugin/io.github.malczuuu.nullmarked)
-[![License](https://img.shields.io/badge/license-Apache%202.0-green)](https://github.com/damianmalczewski/gradle-nullmarked-plugin/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-green)](https://github.com/damianmalczewski/nullmarked-gradle-plugin/blob/main/LICENSE)
 
 Gradle plugin applying [JSpecify](https://jspecify.dev/)'s `@NullMarked` convention to Java projects.
 
@@ -82,6 +82,6 @@ nullmarked {
    ```kotlin
    plugins {
        java
-       id("io.github.malczuuu.nullmarked") version "0.1.1-SNAPSHOT"
+       id("io.github.malczuuu.nullmarked") version "0.2.0-SNAPSHOT"
    }
    ```

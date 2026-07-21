@@ -13,23 +13,35 @@ plugins {
     `maven-publish`
     signing
     id("com.diffplug.spotless") version "8.8.0"
-    id("org.gradle.plugin-compatibility") version "1.0.0"
     id("com.gradle.plugin-publish") version "2.1.1"
+    id("org.gradle.plugin-compatibility") version "1.0.0"
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(17)
     }
+}
+
+tasks.named<JavaCompile>("compileJava").configure {
+    options.compilerArgs.add("-parameters")
+    options.release = 8
 }
 
 kotlin {
     jvmToolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(17)
     }
     compilerOptions {
         apiVersion = KotlinVersion.KOTLIN_1_9
         languageVersion = KotlinVersion.KOTLIN_1_9
+    }
+}
+
+tasks.named<KotlinCompile>("compileKotlin").configure {
+    compilerOptions {
+        javaParameters = true
+        jvmTarget = JvmTarget.JVM_1_8
     }
 }
 
@@ -73,6 +85,24 @@ configurations.getByName("integrationTestRuntimeOnly") {
 sourceSets["integrationTest"].apply {
     compileClasspath += sourceSets["main"].output + sourceSets["test"].output
     runtimeClasspath += sourceSets["main"].output + sourceSets["test"].output
+}
+
+tasks.withType<Test>().configureEach {
+    testLogging {
+        events(
+            TestLogEvent.PASSED,
+            TestLogEvent.FAILED,
+            TestLogEvent.SKIPPED,
+        )
+        exceptionFormat = TestExceptionFormat.FULL
+        showStandardStreams = true
+    }
+}
+
+tasks.named<Test>("integrationTest").configure {
+    providers.gradleProperty("compat.gradle.version").orNull?.let {
+        systemProperty("compat.gradle.version", it)
+    }
 }
 
 val generatePluginProperties = tasks.register("generatePluginProperties") {
@@ -179,36 +209,6 @@ spotless {
         ktlint("1.8.0").editorConfigOverride(mapOf("max_line_length" to "120"))
         endWithNewline()
         lineEndings = LineEnding.UNIX
-    }
-}
-
-tasks.named<JavaCompile>("compileJava").configure {
-    options.compilerArgs.add("-parameters")
-    options.release = 8
-}
-
-tasks.named<KotlinCompile>("compileKotlin").configure {
-    compilerOptions {
-        javaParameters = true
-        jvmTarget = JvmTarget.JVM_1_8
-    }
-}
-
-tasks.withType<Test>().configureEach {
-    testLogging {
-        events(
-            TestLogEvent.PASSED,
-            TestLogEvent.FAILED,
-            TestLogEvent.SKIPPED,
-        )
-        exceptionFormat = TestExceptionFormat.FULL
-        showStandardStreams = true
-    }
-}
-
-tasks.named<Test>("integrationTest").configure {
-    providers.gradleProperty("compat.gradle.version").orNull?.let {
-        systemProperty("compat.gradle.version", it)
     }
 }
 
