@@ -1,5 +1,5 @@
 /*
- * Copyright 2026-current Damian Malczewski
+ * Copyright 2026-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package io.github.malczuuu.gradle.nullmarked
 
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.SourceSet
@@ -42,16 +44,15 @@ class NullMarkedPluginTest {
     project.plugins.apply("io.github.malczuuu.nullmarked")
   }
 
-  private fun compileOnlyJSpecifyDependencies(): List<String> {
+  private fun compileOnlyDependencies(): List<String> {
     // Graph resolution fires the withDependencies hook; missing repositories only make
     // individual components unresolvable, which is irrelevant here.
     project.configurations.getByName("compileClasspath").incoming.resolutionResult.root
-    return project.configurations
-        .getByName("compileOnly")
-        .dependencies
-        .filter { it.group == "org.jspecify" }
-        .map { "${it.group}:${it.name}:${it.version}" }
+    return project.configurations.getByName("compileOnly").dependencies.map { "${it.group}:${it.name}:${it.version}" }
   }
+
+  private fun compileOnlyJSpecifyDependencies(): List<String> =
+      compileOnlyDependencies().filter { it.startsWith("org.jspecify:") }
 
   @Test
   fun `registers extension with defaults`() {
@@ -117,6 +118,22 @@ class NullMarkedPluginTest {
     project.extensions.getByType<NullMarkedExtension>().jspecifyVersion.set("0.9.0")
 
     assertThat(compileOnlyJSpecifyDependencies()).containsExactly("org.jspecify:jspecify:0.9.0")
+  }
+
+  @Test
+  fun `accepts full dependency notation to use a jspecify fork`() {
+    applyPlugins()
+    project.extensions.getByType<NullMarkedExtension>().jspecifyVersion.set("com.example:jspecify-fork:1.2.3")
+
+    assertThat(compileOnlyDependencies()).containsExactly("com.example:jspecify-fork:1.2.3")
+  }
+
+  @Test
+  fun `rejects malformed jspecifyVersion notation`() {
+    applyPlugins()
+    project.extensions.getByType<NullMarkedExtension>().jspecifyVersion.set("org.jspecify:jspecify")
+
+    assertThatThrownBy { compileOnlyDependencies() }.isInstanceOf(InvalidUserDataException::class.java)
   }
 
   @Test

@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog][keepachangelog], and this project adhe
 
 ## [Unreleased]
 
+### Added
+
+- Add option to pass a full dependency to `jspecifyVersion` (to support forks if necessary).
+
 ## [0.1.0] - 2026-07-18
 
 ### Added

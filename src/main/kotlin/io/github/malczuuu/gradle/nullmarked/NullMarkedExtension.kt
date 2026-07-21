@@ -1,5 +1,5 @@
 /*
- * Copyright 2026-current Damian Malczewski
+ * Copyright 2026-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,8 +40,9 @@ abstract class NullMarkedExtension {
   abstract val excludedPackages: ListProperty<String>
 
   /**
-   * Version of the `org.jspecify:jspecify` artifact added as a `compileOnly` dependency when the build script does not
-   * declare JSpecify itself. Defaults to [NullMarkedPlugin.DEFAULT_JSPECIFY_VERSION].
+   * Version of `org.jspecify:jspecify`, or a full `group:name:version` dependency notation (e.g. to use a fork), added
+   * as a `compileOnly` dependency when the build script does not declare JSpecify itself. Defaults to
+   * [NullMarkedPlugin.DEFAULT_JSPECIFY_VERSION].
    */
   abstract val jspecifyVersion: Property<String>
 }

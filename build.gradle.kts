@@ -19,17 +19,17 @@ plugins {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
 kotlin {
     jvmToolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(25)
     }
     compilerOptions {
-        apiVersion = KotlinVersion.KOTLIN_2_0
-        languageVersion = KotlinVersion.KOTLIN_2_0
+        apiVersion = KotlinVersion.KOTLIN_1_9
+        languageVersion = KotlinVersion.KOTLIN_1_9
     }
 }
 
@@ -97,14 +97,14 @@ sourceSets["main"].resources.srcDir(generatePluginProperties)
 
 gradlePlugin {
     testSourceSets(sourceSets["test"], sourceSets["integrationTest"])
-    website = "https://github.com/damianmalczewski/gradle-nullmarked-plugin"
-    vcsUrl = "https://github.com/damianmalczewski/gradle-nullmarked-plugin.git"
+    website = "https://github.com/damianmalczewski/nullmarked-gradle-plugin"
+    vcsUrl = "https://github.com/damianmalczewski/nullmarked-gradle-plugin.git"
     plugins {
         create("nullmarked") {
             id = "io.github.malczuuu.nullmarked"
             implementationClass = "io.github.malczuuu.gradle.nullmarked.NullMarkedPlugin"
-            displayName = "Gradle NullMarked Plugin"
-            description = "Generates @NullMarked-annotated package-info.java for packages missing it."
+            displayName = "NullMarked Gradle Plugin"
+            description = "Gradle plugin applying JSpecify's NullMarked convention to Java projects."
             tags = listOf("JSpecify", "NullMarked", "package-info.java")
             compatibility {
                 features {
@@ -118,9 +118,9 @@ gradlePlugin {
 publishing {
     publications.withType<MavenPublication>().configureEach {
         pom {
-            name = "Gradle NullMarked Plugin"
-            description = "Generates @NullMarked-annotated package-info.java for packages missing it."
-            url = "https://github.com/damianmalczewski/gradle-nullmarked-plugin"
+            name = "NullMarked Gradle Plugin"
+            description = "Gradle plugin applying JSpecify's NullMarked convention to Java projects."
+            url = "https://github.com/damianmalczewski/nullmarked-gradle-plugin"
             inceptionYear = "2026"
             licenses {
                 license {
@@ -136,13 +136,13 @@ publishing {
                 }
             }
             scm {
-                connection = "scm:git:git://github.com/damianmalczewski/gradle-nullmarked-plugin.git"
-                developerConnection = "scm:git:ssh://github.com/damianmalczewski/gradle-nullmarked-plugin.git"
-                url = "https://github.com/damianmalczewski/gradle-nullmarked-plugin"
+                connection = "scm:git:git://github.com/damianmalczewski/nullmarked-gradle-plugin.git"
+                developerConnection = "scm:git:ssh://github.com/damianmalczewski/nullmarked-gradle-plugin.git"
+                url = "https://github.com/damianmalczewski/nullmarked-gradle-plugin"
             }
             issueManagement {
                 system = "GitHub Issues"
-                url = "https://github.com/damianmalczewski/gradle-nullmarked-plugin/issues"
+                url = "https://github.com/damianmalczewski/nullmarked-gradle-plugin/issues"
             }
         }
     }

@@ -1,4 +1,4 @@
-# Agent Instructions - Gradle NullMarked Plugin
+# Agent Instructions - NullMarked Gradle Plugin
 
 Gradle plugin (`io.github.malczuuu.nullmarked`) applying JSpecify's `@NullMarked` convention: generates
 `@NullMarked`-annotated `package-info.java` for packages missing one, and auto-adds the `org.jspecify:jspecify` as
