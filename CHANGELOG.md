@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog][keepachangelog], and this project adhe
 
 ## [Unreleased]
 
+### Fixed
+
+- Restore old format of `package-info.java` (an empty line between header and code).
+
 ## [0.2.0] - 2026-07-21
 
 ### Added
