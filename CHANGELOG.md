@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog][keepachangelog], and this project adhe
 ### Fixed
 
 - Restore old format of `package-info.java` (an empty line between header and code).
+- Exclude generated `package-info.java` files from `Javadoc` tasks; hand-written ones are still included.
 
 ## [0.2.0] - 2026-07-21
 

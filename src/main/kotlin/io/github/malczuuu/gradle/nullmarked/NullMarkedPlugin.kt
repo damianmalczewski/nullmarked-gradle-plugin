@@ -23,6 +23,7 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.javadoc.Javadoc
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.register
@@ -61,13 +62,12 @@ open class NullMarkedPlugin : Plugin<Project> {
         project.extensions.getByType<JavaPluginExtension>().sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
 
     val outputDir = project.layout.buildDirectory.dir("generated/sources/nullmarked/java/${mainSourceSet.name}")
+    val outputDirFile = outputDir.get().asFile
 
     val generateTask =
         project.tasks.register<GeneratePackageInfoTask>(TASK_NAME) {
           group = "generation"
           description = "Generates @NullMarked package-info.java files for packages missing them."
-
-          val outputDirFile = outputDir.get().asFile
 
           // Scan only the hand-written source directories, not our own output.
           val inputDirFiles = project.provider { mainSourceSet.java.srcDirs - outputDirFile }
@@ -81,6 +81,11 @@ open class NullMarkedPlugin : Plugin<Project> {
         }
 
     mainSourceSet.java.srcDir(generateTask.flatMap(GeneratePackageInfoTask::outputDirectory))
+
+    // Generated package-info.java only carries @NullMarked, not documentation; keep it out of Javadoc output.
+    project.tasks.withType<Javadoc>().configureEach {
+      exclude { it.file.toPath().startsWith(outputDirFile.toPath()) }
+    }
   }
 
   private fun configureDefaultDependency(project: Project, extension: NullMarkedExtension) {

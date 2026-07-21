@@ -23,6 +23,7 @@ import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.javadoc.Javadoc
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.getByName
 import org.gradle.kotlin.dsl.getByType
@@ -102,6 +103,28 @@ class NullMarkedPluginTest {
     assertThat(task.sourceDirectories.files)
         .contains(File(project.projectDir, "src/main/java"))
         .doesNotContain(generatedDir)
+  }
+
+  @Test
+  fun `excludes generated package-info from javadoc`() {
+    applyPlugins()
+
+    val task = project.tasks.getByName<GeneratePackageInfoTask>("generatePackageInfo")
+    val generatedDir = task.outputDirectory.get().asFile
+    val generatedPackageInfo =
+        File(generatedDir, "com/acme/package-info.java").apply {
+          parentFile.mkdirs()
+          writeText("package com.acme;")
+        }
+    val handWrittenSource =
+        File(project.projectDir, "src/main/java/com/acme/Foo.java").apply {
+          parentFile.mkdirs()
+          writeText("package com.acme; class Foo {}")
+        }
+
+    val javadocSource = project.tasks.getByName<Javadoc>("javadoc").source.files
+
+    assertThat(javadocSource).doesNotContain(generatedPackageInfo).contains(handWrittenSource)
   }
 
   @Test
