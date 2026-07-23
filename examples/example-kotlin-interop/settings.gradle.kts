@@ -16,4 +16,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "nullmarked-plugin-example"
+rootProject.name = "example-kotlin-interop"

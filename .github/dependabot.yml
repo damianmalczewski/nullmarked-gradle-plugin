@@ -22,7 +22,21 @@ updates:
       - dependency-name: "gradle-wrapper"
 
   - package-ecosystem: "gradle"
-    directory: "/example"
+    directory: "/examples/example-kotlin-interop"
+    schedule:
+      interval: "monthly"
+    target-branch: main
+    open-pull-requests-limit: 10
+    allow:
+      - dependency-type: "direct"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "gradle-wrapper"
+
+  - package-ecosystem: "gradle"
+    directory: "/examples/example-nullmarked-nullaway"
     schedule:
       interval: "monthly"
     target-branch: main

@@ -1,6 +1,6 @@
 # NullMarked & NullAway example
 
-[![CI | Example](https://github.com/damianmalczewski/nullmarked-gradle-plugin/actions/workflows/ci-example.yml/badge.svg)](https://github.com/damianmalczewski/nullmarked-gradle-plugin/actions/workflows/ci-example.yml)
+[![CI | Examples](https://github.com/damianmalczewski/nullmarked-gradle-plugin/actions/workflows/ci-examples.yml/badge.svg)](https://github.com/damianmalczewski/nullmarked-gradle-plugin/actions/workflows/ci-examples.yml)
 
 Standalone Gradle project showing `io.github.malczuuu.nullmarked` used together with [NullAway][NullAway]
 and [Error Prone][ErrorProne].
@@ -8,7 +8,7 @@ and [Error Prone][ErrorProne].
 ## Table of Contents
 
 - [What it demonstrates](#what-it-demonstrates)
-  - [Breaking it on purpose](#breaking-it-on-purpose)
+    - [Breaking it on purpose](#breaking-it-on-purpose)
 - [Building](#building)
 - [Relevant `build.gradle.kts` wiring](#relevant-buildgradlekts-wiring)
 
@@ -81,7 +81,7 @@ nullmarked {
 
 dependencies {
     errorprone("com.google.errorprone:error_prone_core:2.50.0")
-    errorprone("com.uber.nullaway:nullaway:0.13.7")
+    errorprone("com.uber.nullaway:nullaway:0.13.8")
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -95,8 +95,8 @@ tasks.withType<JavaCompile>().configureEach {
 
 `NullAway:OnlyNullMarked` restricts checking to `@NullMarked` packages - exactly the packages this plugin generates
 `package-info.java` for. `LegacyPriceCalculator` in `pricing` stays unannotated and uninspected only because its
-hand-written `package-info.java` keeps that package out of `@NullMarked` scope, same as any not-yet-migrated code in
-a larger codebase.
+hand-written `package-info.java` keeps that package out of `@NullMarked` scope, same as any not-yet-migrated code in a
+larger codebase.
 
 [NullAway]: https://github.com/uber/NullAway
 
