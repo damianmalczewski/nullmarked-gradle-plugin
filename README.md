@@ -27,7 +27,7 @@ Applying `io.github.malczuuu.nullmarked` to a Java project:
 
 Together with [Error Prone](https://errorprone.info) and [NullAway](https://github.com/uber/NullAway), it helps
 protect the project against nullness bugs without hand-writing an annotated `package-info.java` for every package -
-see [`example/`](example) for a sample working setup.
+see [`examples/`](examples) for sample working setups, including Kotlin interop.
 
 ## Installation
 

@@ -1,4 +1,4 @@
-name: CI | Example
+name: CI | Examples
 
 on:
   workflow_dispatch:
@@ -7,25 +7,31 @@ on:
       - "main"
       - "release-*"
     paths:
-      - ".github/workflows/ci-example.yml"
-      - "example/**"
+      - ".github/workflows/ci-examples.yml"
+      - "examples/**"
   pull_request:
     branches:
       - "main"
       - "release-*"
     paths:
-      - ".github/workflows/example.yml"
-      - "example/**"
+      - ".github/workflows/ci-examples.yml"
+      - "examples/**"
 
 jobs:
   build:
-    name: Build Example
+    name: Build ${{ matrix.example }}
+    strategy:
+      fail-fast: false
+      matrix:
+        example:
+          - example-kotlin-interop
+          - example-nullmarked-nullaway
     runs-on: ubuntu-latest
     permissions:
       contents: read
     defaults:
       run:
-        working-directory: example
+        working-directory: examples/${{ matrix.example }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -47,9 +53,9 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: example-${{ runner.os }}-${{ hashFiles('example/**/*.gradle.kts', 'example/gradle.properties', 'example/**/gradle-wrapper.properties') }}
+          key: examples-${{ matrix.example }}-${{ runner.os }}-${{ hashFiles(format('examples/{0}/**/*.gradle.kts', matrix.example), format('examples/{0}/gradle.properties', matrix.example), format('examples/{0}/**/gradle-wrapper.properties', matrix.example)) }}
           restore-keys: |
-            example-${{ runner.os }}-
+            examples-${{ matrix.example }}-${{ runner.os }}-
 
       - name: Run Gradle Build
         env:
