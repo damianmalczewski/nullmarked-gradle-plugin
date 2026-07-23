@@ -1,7 +1,7 @@
 plugins {
     java
     application
-    kotlin("jvm") version "2.4.0"
+    kotlin("jvm") version "2.4.10"
     id("io.github.malczuuu.nullmarked") version "0.2.1"
 }
 
