@@ -6,6 +6,7 @@ on:
       - "main"
       - "release-*"
     paths:
+      - "!example/**"
       - ".github/workflows/gradle-dependency-submission.yml"
       - "gradle/**"
       - "**/*.gradle.kts"
