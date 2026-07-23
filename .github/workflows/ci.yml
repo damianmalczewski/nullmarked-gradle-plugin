@@ -7,10 +7,11 @@ on:
       - "main"
       - "release-*"
     paths:
+      - "!example/**"
       - ".github/workflows/ci.yml"
       - "gradle/**"
-      - "**/src/**"
-      - "**/*.gradle.kts"
+      - "src/**"
+      - "*.gradle.kts"
       - "gradle.properties"
       - "gradlew"
       - "gradlew.bat"

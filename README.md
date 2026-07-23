@@ -7,6 +7,13 @@
 
 Gradle plugin applying [JSpecify](https://jspecify.dev/)'s `@NullMarked` convention to Java projects.
 
+## Table of Contents
+
+- [Why bother with NullMarked Plugin](#why-bother-with-nullmarked-plugin)
+- [Installation](#installation)
+- [Building](#building)
+- [Using local snapshot](#using-local-snapshot)
+
 ## Why bother with NullMarked Plugin
 
 Applying `io.github.malczuuu.nullmarked` to a Java project:
@@ -17,6 +24,10 @@ Applying `io.github.malczuuu.nullmarked` to a Java project:
    `compileJava` picks it up automatically. Hand-written `package-info.java` files always win.
 2. **Adds the JSpecify dependency** - `org.jspecify:jspecify:1.0.0` is added as `compileOnly` unless the build script
    already declares it in `compileOnly`, `implementation`, `api`, or `compileOnlyApi`.
+
+Together with [Error Prone](https://errorprone.info) and [NullAway](https://github.com/uber/NullAway), it helps
+protect the project against nullness bugs without hand-writing an annotated `package-info.java` for every package -
+see [`example/`](example) for a sample working setup.
 
 ## Installation
 
