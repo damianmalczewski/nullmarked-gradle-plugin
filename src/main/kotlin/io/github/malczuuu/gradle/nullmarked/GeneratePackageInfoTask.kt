@@ -16,7 +16,6 @@
 
 package io.github.malczuuu.gradle.nullmarked
 
-import java.io.File
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -101,47 +100,4 @@ abstract class GeneratePackageInfoTask : DefaultTask() {
       } else {
         emptyMap()
       }
-
-  private fun prunePackages(
-      existingFiles: Map<String, File>,
-      expectedContents: Map<String, String>,
-      outputDir: File,
-  ) {
-    val filesToPrune = existingFiles.keys.filter { it !in expectedContents }
-    filesToPrune.forEach { packageName -> prunePackage(existingFiles.getValue(packageName), outputDir) }
-  }
-
-  private fun prunePackage(file: File, outputDir: File) {
-    file.delete()
-    var dir = file.parentFile
-    while (dir != null && dir != outputDir && dir.listFiles()?.isEmpty() == true) {
-      val parent = dir.parentFile
-      dir.delete()
-      dir = parent
-    }
-  }
-
-  private fun ensurePackageInfoFile(
-      existingFiles: Map<String, File>,
-      packageName: String,
-      outputDir: File,
-      content: String,
-  ) {
-    val existingFile = existingFiles[packageName]
-    if (existingFile == null) {
-      writeNewPackageInfo(outputDir, packageName, content)
-    } else if (existingFile.isPackageInfoDirty(content)) {
-      rewritePackageInfo(existingFile, content)
-    }
-  }
-
-  private fun writeNewPackageInfo(outputDir: File, packageName: String, content: String) {
-    val packageDir = outputDir.resolve(packageName.replace('.', '/'))
-    packageDir.mkdirs()
-    packageDir.resolve("package-info.java").writeText(content)
-  }
-
-  private fun File.isPackageInfoDirty(content: String): Boolean = readText() != content
-
-  private fun rewritePackageInfo(existingFile: File, content: String) = existingFile.writeText(content)
 }

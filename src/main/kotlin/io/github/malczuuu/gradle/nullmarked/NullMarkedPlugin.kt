@@ -16,7 +16,6 @@
 
 package io.github.malczuuu.gradle.nullmarked
 
-import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Dependency
@@ -115,23 +114,4 @@ open class NullMarkedPlugin : Plugin<Project> {
       dependencies.any {
         it.group == coordinate.group && it.name == coordinate.name
       }
-
-  /**
-   * Accepts either a bare version (`"1.0.0"`, applied to the default `org.jspecify:jspecify` coordinate) or a full
-   * `group:name:version` dependency notation, letting users point at a fork of JSpecify.
-   */
-  private fun parseJspecifyCoordinate(value: String): JSpecifyCoordinate {
-    val parts = value.split(":")
-    return when (parts.size) {
-      1 -> JSpecifyCoordinate(JSPECIFY_GROUP, JSPECIFY_NAME, parts[0])
-      3 -> JSpecifyCoordinate(parts[0], parts[1], parts[2])
-      else ->
-          throw InvalidUserDataException(
-              "nullmarked.jspecifyVersion must be either a version (e.g. \"1.0.0\") or a full dependency notation " +
-                  "(e.g. \"org.jspecify:jspecify:1.0.0\"), but was: \"$value\""
-          )
-    }
-  }
-
-  private data class JSpecifyCoordinate(val group: String, val name: String, val version: String)
 }
