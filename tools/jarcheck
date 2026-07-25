@@ -19,5 +19,5 @@ echo "===== nullmarked-gradle-plugin ===="
 javap \
     -verbose \
     -classpath build/libs/nullmarked-gradle-plugin-*-SNAPSHOT.jar \
-    io.github.malczuuu.gradle.nullmarked.NullMarkedPlugin \
+    io.github.malczuuu.nullmarked.NullMarkedPlugin \
     | grep "major version"

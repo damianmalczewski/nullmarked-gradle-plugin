@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.gradle.nullmarked
+package io.github.malczuuu.nullmarked
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project

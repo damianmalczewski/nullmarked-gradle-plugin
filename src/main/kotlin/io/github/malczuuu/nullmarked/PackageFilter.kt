@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.gradle.nullmarked
+package io.github.malczuuu.nullmarked
 
 /**
  * A single `include`/`exclude` call argument of the `nullmarked { packages { ... } }` block, paired with the package

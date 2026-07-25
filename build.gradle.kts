@@ -116,7 +116,7 @@ val generatePluginProperties = tasks.register("generatePluginProperties") {
     outputs.dir(outputDir)
 
     doLast {
-        outputDir.get().file("io/github/malczuuu/gradle/nullmarked/nullmarked.properties").asFile.apply {
+        outputDir.get().file("io/github/malczuuu/nullmarked/nullmarked.properties").asFile.apply {
             parentFile.mkdirs()
             writeText("version=$pluginVersion\n")
         }
@@ -132,7 +132,7 @@ gradlePlugin {
     plugins {
         create("nullmarked") {
             id = "io.github.malczuuu.nullmarked"
-            implementationClass = "io.github.malczuuu.gradle.nullmarked.NullMarkedPlugin"
+            implementationClass = "io.github.malczuuu.nullmarked.NullMarkedPlugin"
             displayName = "NullMarked Gradle Plugin"
             description = "Gradle plugin applying JSpecify's NullMarked convention to Java projects."
             tags = listOf("JSpecify", "NullMarked", "package-info.java")
