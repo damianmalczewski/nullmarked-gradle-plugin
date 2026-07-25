@@ -1,7 +1,7 @@
 plugins {
     java
     application
-    id("io.github.malczuuu.nullmarked") version "0.3.0"
+    id("io.github.malczuuu.nullmarked") version "0.4.0"
 }
 
 java {
