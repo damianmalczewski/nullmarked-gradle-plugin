@@ -34,6 +34,7 @@ class NullMarkedExtensionTest {
     extension = project.extensions.create<NullMarkedExtension>("nullmarked")
     extension.enabled.convention(true)
     extension.headerEnabled.convention(true)
+    extension.verifyOnly.convention(false)
     extension.excludedPackages.convention(emptyList())
   }
 
@@ -45,7 +46,19 @@ class NullMarkedExtensionTest {
 
     assertThat(spec.enabled.get()).isTrue()
     assertThat(spec.headerEnabled.get()).isTrue()
+    assertThat(spec.verifyOnly.get()).isFalse()
     assertThat(spec.excludedPackages.get()).containsExactly("com.acme..")
+  }
+
+  @Test
+  fun `sourceSet spec inherits a top-level verifyOnly and can override it`() {
+    extension.verifyOnly.set(true)
+
+    val inheriting = extension.sourceSets.maybeCreate("test")
+    extension.sourceSet("main21") { verifyOnly.set(false) }
+
+    assertThat(inheriting.verifyOnly.get()).isTrue()
+    assertThat(extension.sourceSets.getByName("main21").verifyOnly.get()).isFalse()
   }
 
   @Test

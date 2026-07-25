@@ -34,7 +34,7 @@ internal fun computeExpectedPackageInfos(
     pluginVersion: String,
 ): Map<String, String> {
   val header = generateHeader(headerEnabled, pluginVersion)
-  return findPackagesToGenerate(sourceDirectories, excludedPackages).associateWith { packageName ->
+  return findPackagesWithoutPackageInfo(sourceDirectories, excludedPackages).associateWith { packageName ->
     header +
         """
         @org.jspecify.annotations.NullMarked
@@ -46,14 +46,18 @@ internal fun computeExpectedPackageInfos(
 }
 
 /**
- * Finds packages that contain at least one hand-written `.java` file, have no hand-written `package-info.java` of their
- * own, and are not matched by [excludedPackages].
+ * Finds packages that contain at least one `.java` file, have no `package-info.java` of their own, and are not matched
+ * by [excludedPackages]. Used both to decide what to generate and to decide what verification is missing; which of the
+ * two it answers depends only on whether the caller passes the generated output directory in [sourceDirectories].
  *
- * @param sourceDirectories hand-written Java source directories to scan
+ * @param sourceDirectories Java source directories to scan
  * @param excludedPackages package identifiers (ArchUnit syntax, see [PackagePattern]) whose packages are skipped
- * @return package names that need a generated `package-info.java`
+ * @return package names lacking a `package-info.java`
  */
-internal fun findPackagesToGenerate(sourceDirectories: Iterable<File>, excludedPackages: List<String>): Set<String> {
+internal fun findPackagesWithoutPackageInfo(
+    sourceDirectories: Iterable<File>,
+    excludedPackages: List<String>,
+): Set<String> {
   val packagesToGenerate = sortedSetOf<String>()
   val packagesWithPackageInfo = sortedSetOf<String>()
 

@@ -31,9 +31,10 @@ class GradleCompatibilityTest {
 
   @TempDir lateinit var projectDir: File
 
+  private val gradleVersion: String? = System.getProperty("compat.gradle.version")
+
   @Test
   fun `generates package-info, adds dependency and compiles`() {
-    val gradleVersion: String? = System.getProperty("compat.gradle.version")
     val project = TestProject(projectDir)
     project.writeStandardBuild(rootProjectName = "compat-under-test")
     project.writeSampleSources()
@@ -43,9 +44,32 @@ class GradleCompatibilityTest {
     val result = runner.build()
 
     assertThat(result.task(":generatePackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(result.task(":verifyPackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(result.task(":compileJava")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(project.generatedPackageInfo("com.acme")).exists()
     assertThat(project.generatedPackageInfo("com.acme.manual")).doesNotExist()
     assertThat(project.compiledClass("com.acme.package-info")).exists()
+  }
+
+  @Test
+  fun `verifyOnly skips generation and fails on a package without package-info`() {
+    val project = TestProject(projectDir)
+    project.writeStandardBuild(rootProjectName = "compat-under-test")
+    project.writeSampleSources()
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            verifyOnly = true
+        }
+        """
+    )
+
+    val runner = project.runner("compileJava")
+    gradleVersion?.let(runner::withGradleVersion)
+    val result = runner.buildAndFail()
+
+    assertThat(result.task(":verifyPackageInfo")?.outcome).isEqualTo(TaskOutcome.FAILED)
+    assertThat(result.output).contains("1 package(s) without a package-info.java").contains("com.acme")
+    assertThat(project.generatedPackageInfo("com.acme")).doesNotExist()
   }
 }

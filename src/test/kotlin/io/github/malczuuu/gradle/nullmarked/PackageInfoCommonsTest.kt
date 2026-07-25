@@ -91,7 +91,7 @@ class PackageInfoCommonsTest {
     writeSource("com/acme/Foo.java")
     writeSource("com/acme/util/Util.java")
 
-    val result = findPackagesToGenerate(listOf(sourceDir), emptyList())
+    val result = findPackagesWithoutPackageInfo(listOf(sourceDir), emptyList())
 
     assertThat(result).containsExactlyInAnyOrder("com.acme", "com.acme.util")
   }
@@ -100,7 +100,7 @@ class PackageInfoCommonsTest {
   fun `skips the default package`() {
     writeSource("TopLevel.java")
 
-    val result = findPackagesToGenerate(listOf(sourceDir), emptyList())
+    val result = findPackagesWithoutPackageInfo(listOf(sourceDir), emptyList())
 
     assertThat(result).isEmpty()
   }
@@ -110,7 +110,7 @@ class PackageInfoCommonsTest {
     writeSource("com/acme/Foo.java")
     writeSource("com/acme/package-info.java", "package com.acme;")
 
-    val result = findPackagesToGenerate(listOf(sourceDir), emptyList())
+    val result = findPackagesWithoutPackageInfo(listOf(sourceDir), emptyList())
 
     assertThat(result).doesNotContain("com.acme")
   }
@@ -119,7 +119,7 @@ class PackageInfoCommonsTest {
   fun `skips intermediate directories without java files`() {
     writeSource("com/acme/deep/Foo.java")
 
-    val result = findPackagesToGenerate(listOf(sourceDir), emptyList())
+    val result = findPackagesWithoutPackageInfo(listOf(sourceDir), emptyList())
 
     assertThat(result).containsExactly("com.acme.deep")
   }
@@ -128,7 +128,7 @@ class PackageInfoCommonsTest {
   fun `ignores non-java files`() {
     writeSource("com/acme/notes.txt", "not java")
 
-    val result = findPackagesToGenerate(listOf(sourceDir), emptyList())
+    val result = findPackagesWithoutPackageInfo(listOf(sourceDir), emptyList())
 
     assertThat(result).isEmpty()
   }
@@ -138,7 +138,7 @@ class PackageInfoCommonsTest {
     writeSource("com/acme/Foo.java")
     writeSource("com/acme/util/Util.java")
 
-    val result = findPackagesToGenerate(listOf(sourceDir), listOf("com.acme"))
+    val result = findPackagesWithoutPackageInfo(listOf(sourceDir), listOf("com.acme"))
 
     assertThat(result).containsExactly("com.acme.util")
   }
@@ -149,7 +149,7 @@ class PackageInfoCommonsTest {
     writeSource("com/acme/util/Util.java")
     writeSource("com/other/Bar.java")
 
-    val result = findPackagesToGenerate(listOf(sourceDir), listOf("com.acme.."))
+    val result = findPackagesWithoutPackageInfo(listOf(sourceDir), listOf("com.acme.."))
 
     assertThat(result).containsExactly("com.other")
   }
@@ -163,7 +163,7 @@ class PackageInfoCommonsTest {
       writeText("package com.acme;")
     }
 
-    val result = findPackagesToGenerate(listOf(sourceDir, secondSourceDir), emptyList())
+    val result = findPackagesWithoutPackageInfo(listOf(sourceDir, secondSourceDir), emptyList())
 
     assertThat(result).doesNotContain("com.acme")
   }
@@ -172,7 +172,7 @@ class PackageInfoCommonsTest {
   fun `ignores non-directory entries in source directories`() {
     val notADirectory = File(projectDir, "not-a-dir.txt").apply { writeText("placeholder") }
 
-    val result = findPackagesToGenerate(listOf(notADirectory), emptyList())
+    val result = findPackagesWithoutPackageInfo(listOf(notADirectory), emptyList())
 
     assertThat(result).isEmpty()
   }

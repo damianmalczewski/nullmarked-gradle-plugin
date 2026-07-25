@@ -39,6 +39,12 @@ abstract class NullMarkedSourceSetSpec @Inject constructor(private val name: Str
   abstract val headerEnabled: Property<Boolean>
 
   /**
+   * Whether packages of this source set are only verified to declare a `package-info.java` instead of having missing
+   * ones generated, see [NullMarkedExtension.verifyOnly]. Defaults to `nullmarked.verifyOnly`.
+   */
+  abstract val verifyOnly: Property<Boolean>
+
+  /**
    * Package identifiers excluded from generation for this source set, see [NullMarkedExtension.excludedPackages].
    * Defaults to `nullmarked.excludedPackages`.
    */

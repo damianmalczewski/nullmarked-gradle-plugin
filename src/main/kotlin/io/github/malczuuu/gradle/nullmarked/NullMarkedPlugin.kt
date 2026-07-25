@@ -23,19 +23,25 @@ import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.javadoc.Javadoc
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
+import org.gradle.language.base.plugins.LifecycleBasePlugin
 
 /**
  * Applies JSpecify's `NullMarked` convention to a Java project:
  *
  * - generates a `@NullMarked` `package-info.java` for every non-empty package of each configured source set (`main`
  *   always, others via the `nullmarked { sourceSet("...") { ... } }` DSL) that does not declare one,
+ * - verifies before compilation that every such package ends up with a `package-info.java`, hand-written or generated,
  * - adds `org.jspecify:jspecify` as a `compileOnly`-equivalent dependency of each configured source set unless the
  *   build script declares a JSpecify dependency itself.
+ *
+ * With `verifyOnly`, generation is skipped and verification fails on packages without a hand-written
+ * `package-info.java`; with `enabled = false`, both generation and verification are off.
  */
 open class NullMarkedPlugin : Plugin<Project> {
 
@@ -48,6 +54,7 @@ open class NullMarkedPlugin : Plugin<Project> {
     val extension = target.extensions.create<NullMarkedExtension>("nullmarked")
     extension.enabled.convention(true)
     extension.headerEnabled.convention(true)
+    extension.verifyOnly.convention(false)
     extension.excludedPackages.convention(emptyList())
     extension.jspecifyVersion.convention(JSPECIFY_VERSION)
     extension.sourceSets.maybeCreate(SourceSet.MAIN_SOURCE_SET_NAME)
@@ -60,7 +67,8 @@ open class NullMarkedPlugin : Plugin<Project> {
         javaSourceSets
             .matching { it.name == spec.name }
             .all {
-              configurePackageInfoGeneration(target, this, spec)
+              val generateTask = configurePackageInfoGeneration(target, this, spec)
+              configurePackageInfoVerification(target, this, spec, generateTask)
               configureDefaultDependency(target, this, extension.jspecifyVersion)
             }
       }
@@ -71,7 +79,7 @@ open class NullMarkedPlugin : Plugin<Project> {
       project: Project,
       javaSourceSet: SourceSet,
       spec: NullMarkedSourceSetSpec,
-  ) {
+  ): TaskProvider<GeneratePackageInfoTask> {
     val outputDir = project.layout.buildDirectory.dir("generated/sources/nullmarked/java/${javaSourceSet.name}")
     val outputDirFile = outputDir.get().asFile
 
@@ -84,7 +92,9 @@ open class NullMarkedPlugin : Plugin<Project> {
           val inputDirFiles = project.provider { javaSourceSet.java.srcDirs - outputDirFile }
 
           sourceDirectories.from(inputDirFiles)
-          generationEnabled.set(spec.enabled)
+          // verifyOnly opts out of generated code; the source set is then expected to declare
+          // every package-info.java by hand and the verification task enforces it.
+          generationEnabled.set(spec.enabled.zip(spec.verifyOnly) { enabled, verifyOnly -> enabled && !verifyOnly })
           headerEnabled.set(spec.headerEnabled)
           excludedPackages.set(spec.excludedPackages)
 
@@ -97,6 +107,39 @@ open class NullMarkedPlugin : Plugin<Project> {
     project.tasks.withType<Javadoc>().configureEach {
       exclude { it.file.toPath().startsWith(outputDirFile.toPath()) }
     }
+
+    return generateTask
+  }
+
+  /**
+   * Registers the verification task for [javaSourceSet] and makes its compilation depend on it. The task scans the
+   * whole source set, generated output included, so it verifies the end state in both the generating and the
+   * `verifyOnly` setup.
+   */
+  private fun configurePackageInfoVerification(
+      project: Project,
+      javaSourceSet: SourceSet,
+      spec: NullMarkedSourceSetSpec,
+      generateTask: TaskProvider<GeneratePackageInfoTask>,
+  ) {
+    val taskName = javaSourceSet.getTaskName("verify", "packageInfo")
+
+    val verifyTask =
+        project.tasks.register<VerifyPackageInfoTask>(taskName) {
+          group = LifecycleBasePlugin.VERIFICATION_GROUP
+          description = "Verifies that every package declares a package-info.java."
+
+          // Verification has to see what generation produced, not only the hand-written sources.
+          dependsOn(generateTask)
+          sourceDirectories.from(project.provider { javaSourceSet.java.srcDirs })
+          verificationEnabled.set(spec.enabled)
+          verifyOnly.set(spec.verifyOnly)
+          excludedPackages.set(spec.excludedPackages)
+
+          markerFile.set(project.layout.buildDirectory.file("tmp/nullmarked/$taskName/verification.txt"))
+        }
+
+    project.tasks.named(javaSourceSet.compileJavaTaskName).configure { dependsOn(verifyTask) }
   }
 
   private fun configureDefaultDependency(

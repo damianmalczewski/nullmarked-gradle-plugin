@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog][keepachangelog], and this project adhe
 
 ## [Unreleased]
 
+### Added
+
+- Add a `verifyPackageInfo` task per configured source set (`verifyTestPackageInfo`, etc.), run before compilation,
+  failing the build with the list of packages that end up without a `package-info.java` - hand-written or generated.
+- Add `verifyOnly` (top-level and per source set) to opt out of generated code: nothing is generated and only
+  hand-written `package-info.java` files satisfy verification. Setting `enabled = false` turns both generation and
+  verification off.
+
 ## [0.3.0] - 2026-07-25
 
 ### Added

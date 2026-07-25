@@ -37,6 +37,14 @@ abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
   abstract val headerEnabled: Property<Boolean>
 
   /**
+   * Whether packages are only verified to declare a `package-info.java` instead of having missing ones generated. With
+   * `true`, nothing is generated and the build fails on any package without a hand-written `package-info.java`.
+   * Verification runs in both modes, but only fails in this one. Ignored when [enabled] is `false`, which turns both
+   * generation and verification off. Defaults to `false`.
+   */
+  abstract val verifyOnly: Property<Boolean>
+
+  /**
    * Package identifiers excluded from `package-info.java` generation, following ArchUnit's package identifier syntax:
    * `org.acme` excludes only `org.acme`, `org.acme..` excludes `org.acme` and all its subpackages, `..internal..`
    * excludes any package containing an `internal` segment, `*` matches within a single segment. Defaults to an empty
@@ -52,8 +60,9 @@ abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
 
   /**
    * Per-`SourceSet` overrides, keyed by source set name. The `main` source set is always present, even if never
-   * configured explicitly. Each element's [NullMarkedSourceSetSpec.enabled], [NullMarkedSourceSetSpec.headerEnabled]
-   * and [NullMarkedSourceSetSpec.excludedPackages] default to this extension's own values of the same name.
+   * configured explicitly. Each element's [NullMarkedSourceSetSpec.enabled], [NullMarkedSourceSetSpec.headerEnabled],
+   * [NullMarkedSourceSetSpec.verifyOnly] and [NullMarkedSourceSetSpec.excludedPackages] default to this extension's own
+   * values of the same name.
    */
   val sourceSets: NamedDomainObjectContainer<NullMarkedSourceSetSpec> =
       objects.domainObjectContainer(NullMarkedSourceSetSpec::class.java) { name ->
@@ -64,6 +73,7 @@ abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
     sourceSets.all {
       enabled.convention(this@NullMarkedExtension.enabled)
       headerEnabled.convention(this@NullMarkedExtension.headerEnabled)
+      verifyOnly.convention(this@NullMarkedExtension.verifyOnly)
       excludedPackages.convention(this@NullMarkedExtension.excludedPackages)
     }
   }

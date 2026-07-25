@@ -24,13 +24,19 @@ Gradle plugin (`io.github.malczuuu.nullmarked`) applying JSpecify's `@NullMarked
 ## Architecture
 
 - `NullMarkedPlugin` wires everything once the `java` plugin is applied: registers `generatePackageInfo`
-  (`GeneratePackageInfoTask`) and adds the JSpecify dependency unless already declared in `api`/`compileOnlyApi`/
-  `compileOnly`/`implementation`.
+  (`GeneratePackageInfoTask`) and `verifyPackageInfo` (`VerifyPackageInfoTask`), and adds the JSpecify dependency unless
+  already declared in `api`/`compileOnlyApi`/`compileOnly`/`implementation`.
 - `GeneratePackageInfoTask` scans hand-written `main` source dirs (its own output dir excluded), writes one
   `package-info.java` per package that has `.java` files but none of its own, minus `excludedPackages` matches.
   Disabling (`enabled = false`) only deletes previously generated output - it doesn't skip the task.
   `excludedPackages` uses ArchUnit's package-identifier syntax (`org.acme..`, `..internal..`, `*`), parsed by
   `PackagePattern`.
+- `VerifyPackageInfoTask` runs between generation and compilation (`compileJava` dependsOn it), scans the whole source
+  set (generated output included) and throws `VerificationException` listing every package without a
+  `package-info.java`. It writes a marker file under `build/tmp/nullmarked/<task>/` only so Gradle has an output to
+  base up-to-date checks on. What it verifies never depends on the mode; its `verifyOnly` input only shapes the failure
+  message. The flag otherwise just feeds task inputs: `generationEnabled = enabled && !verifyOnly`,
+  `verificationEnabled = enabled`.
 - Plugin version is baked into a resource (`generatePluginProperties` task in `build.gradle.kts`) and read back by
   `GeneratePackageInfoTask` to stamp the generated file header.
 

@@ -54,6 +54,9 @@ class NullMarkedPluginTest {
   private fun compileOnlyJSpecifyDependencies(): List<String> =
       compileOnlyDependencies().filter { it.startsWith("org.jspecify:") }
 
+  private fun taskDependencyNames(taskName: String): List<String> =
+      project.tasks.getByName(taskName).let { task -> task.taskDependencies.getDependencies(task).map { it.name } }
+
   @Test
   fun `registers extension with defaults`() {
     applyPlugins()
@@ -78,7 +81,78 @@ class NullMarkedPluginTest {
     project.plugins.apply("io.github.malczuuu.nullmarked")
 
     assertThat(project.tasks.findByName("generatePackageInfo")).isNull()
+    assertThat(project.tasks.findByName("verifyPackageInfo")).isNull()
     assertThat(project.extensions.findByType<NullMarkedExtension>()).isNotNull()
+  }
+
+  @Test
+  fun `registers verifyPackageInfo task for java projects`() {
+    applyPlugins()
+
+    val task = project.tasks.getByName("verifyPackageInfo")
+
+    assertThat(task).isInstanceOf(VerifyPackageInfoTask::class.java)
+  }
+
+  @Test
+  fun `compileJava runs after verification, which runs after generation`() {
+    applyPlugins()
+
+    assertThat(taskDependencyNames("compileJava")).contains("verifyPackageInfo")
+    assertThat(taskDependencyNames("verifyPackageInfo")).contains("generatePackageInfo")
+  }
+
+  @Test
+  fun `verification scans generated output next to hand-written sources`() {
+    applyPlugins()
+
+    val verifyTask = project.tasks.getByName<VerifyPackageInfoTask>("verifyPackageInfo")
+    val generatedDir =
+        project.tasks.getByName<GeneratePackageInfoTask>("generatePackageInfo").outputDirectory.get().asFile
+
+    assertThat(verifyTask.sourceDirectories.files)
+        .contains(File(project.projectDir, "src/main/java"))
+        .contains(generatedDir)
+  }
+
+  @Test
+  fun `generation and verification are both on by default`() {
+    applyPlugins()
+
+    assertThat(project.tasks.getByName<GeneratePackageInfoTask>("generatePackageInfo").generationEnabled.get()).isTrue()
+    assertThat(project.tasks.getByName<VerifyPackageInfoTask>("verifyPackageInfo").verificationEnabled.get()).isTrue()
+  }
+
+  @Test
+  fun `verifyOnly turns generation off but keeps verification on`() {
+    applyPlugins()
+    project.extensions.getByType<NullMarkedExtension>().verifyOnly.set(true)
+
+    assertThat(project.tasks.getByName<GeneratePackageInfoTask>("generatePackageInfo").generationEnabled.get())
+        .isFalse()
+    val verifyTask = project.tasks.getByName<VerifyPackageInfoTask>("verifyPackageInfo")
+    assertThat(verifyTask.verificationEnabled.get()).isTrue()
+    assertThat(verifyTask.verifyOnly.get()).isTrue()
+  }
+
+  @Test
+  fun `disabling the plugin turns both generation and verification off`() {
+    applyPlugins()
+    project.extensions.getByType<NullMarkedExtension>().enabled.set(false)
+
+    assertThat(project.tasks.getByName<GeneratePackageInfoTask>("generatePackageInfo").generationEnabled.get())
+        .isFalse()
+    assertThat(project.tasks.getByName<VerifyPackageInfoTask>("verifyPackageInfo").verificationEnabled.get()).isFalse()
+  }
+
+  @Test
+  fun `verifyOnly can be set per source set`() {
+    applyPlugins()
+    project.extensions.getByType<NullMarkedExtension>().sourceSet("test") { verifyOnly.set(true) }
+
+    assertThat(project.tasks.getByName<GeneratePackageInfoTask>("generatePackageInfo").generationEnabled.get()).isTrue()
+    assertThat(project.tasks.getByName<GeneratePackageInfoTask>("generateTestPackageInfo").generationEnabled.get())
+        .isFalse()
   }
 
   @Test
@@ -195,16 +269,17 @@ class NullMarkedPluginTest {
     applyPlugins()
 
     assertThat(project.tasks.findByName("generateTestPackageInfo")).isNull()
+    assertThat(project.tasks.findByName("verifyTestPackageInfo")).isNull()
   }
 
   @Test
-  fun `registers a name-derived task for a configured source set`() {
+  fun `registers name-derived tasks for a configured source set`() {
     applyPlugins()
     project.extensions.getByType<NullMarkedExtension>().sourceSet("test") {}
 
-    val task = project.tasks.getByName("generateTestPackageInfo")
-
-    assertThat(task).isInstanceOf(GeneratePackageInfoTask::class.java)
+    assertThat(project.tasks.getByName("generateTestPackageInfo")).isInstanceOf(GeneratePackageInfoTask::class.java)
+    assertThat(project.tasks.getByName("verifyTestPackageInfo")).isInstanceOf(VerifyPackageInfoTask::class.java)
+    assertThat(taskDependencyNames("compileTestJava")).contains("verifyTestPackageInfo")
   }
 
   @Test

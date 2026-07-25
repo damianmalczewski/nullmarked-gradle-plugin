@@ -41,6 +41,7 @@ class NullMarkedPluginFunctionalTest {
     val result = project.runner("compileJava").build()
 
     assertThat(result.task(":generatePackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(result.task(":verifyPackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(result.task(":compileJava")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(project.generatedPackageInfo("com.acme")).exists()
     assertThat(project.generatedPackageInfo("com.acme.manual")).doesNotExist()
@@ -225,6 +226,126 @@ class NullMarkedPluginFunctionalTest {
     val result = project.runner("tasks", "--all").build()
 
     assertThat(result.output).doesNotContain("generateTestPackageInfo")
+  }
+
+  @Test
+  fun `verification passes on generated and hand-written package-info files`() {
+    val result = project.runner("verifyPackageInfo").build()
+
+    assertThat(result.task(":generatePackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(result.task(":verifyPackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+  }
+
+  @Test
+  fun `verifyPackageInfo is up-to-date on unchanged sources`() {
+    project.runner("verifyPackageInfo").build()
+    val secondRun = project.runner("verifyPackageInfo").build()
+
+    assertThat(secondRun.task(":verifyPackageInfo")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
+  }
+
+  @Test
+  fun `verifyOnly fails the build listing packages without a hand-written package-info`() {
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            verifyOnly = true
+        }
+        """
+    )
+
+    val result = project.runner("compileJava").buildAndFail()
+
+    assertThat(result.task(":verifyPackageInfo")?.outcome).isEqualTo(TaskOutcome.FAILED)
+    assertThat(result.output).contains("1 package(s) without a package-info.java").contains("com.acme")
+    assertThat(result.output).contains("disabling nullmarked.verifyOnly")
+    assertThat(result.output).doesNotContain("com.acme.manual")
+    assertThat(project.generatedPackageInfo("com.acme")).doesNotExist()
+  }
+
+  @Test
+  fun `verifyOnly passes once every package declares a package-info`() {
+    project.writeSource(
+        "com/acme/package-info.java",
+        """
+        @NullMarked
+        package com.acme;
+
+        import org.jspecify.annotations.NullMarked;
+        """,
+    )
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            verifyOnly = true
+        }
+        """
+    )
+
+    val result = project.runner("compileJava").build()
+
+    assertThat(result.task(":verifyPackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(result.task(":compileJava")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(project.generatedPackageInfo("com.acme")).doesNotExist()
+  }
+
+  @Test
+  fun `verifyOnly skips packages matched by excludedPackages`() {
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            verifyOnly = true
+            excludedPackages = listOf("com.acme")
+        }
+        """
+    )
+
+    val result = project.runner("verifyPackageInfo").build()
+
+    assertThat(result.task(":verifyPackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+  }
+
+  @Test
+  fun `disabling the plugin disables verification too`() {
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            enabled = false
+            verifyOnly = true
+        }
+        """
+    )
+
+    val result = project.runner("compileJava").build()
+
+    assertThat(result.task(":verifyPackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(result.task(":compileJava")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+  }
+
+  @Test
+  fun `verifyOnly applies per source set`() {
+    project.writeTestSource(
+        "com/acme/FooTest.java",
+        """
+        package com.acme;
+
+        class FooTest {}
+        """,
+    )
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            sourceSet("test") {
+                verifyOnly = true
+            }
+        }
+        """
+    )
+
+    val result = project.runner("compileTestJava").buildAndFail()
+
+    assertThat(result.task(":verifyTestPackageInfo")?.outcome).isEqualTo(TaskOutcome.FAILED)
+    assertThat(project.generatedPackageInfo("com.acme", sourceSet = "test")).doesNotExist()
   }
 
   @Test
