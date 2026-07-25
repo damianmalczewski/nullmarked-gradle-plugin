@@ -182,4 +182,73 @@ class NullMarkedPluginTest {
 
     assertThat(compileOnlyJSpecifyDependencies()).isEmpty()
   }
+
+  @Test
+  fun `main source set spec is always present`() {
+    applyPlugins()
+
+    assertThat(project.extensions.getByType<NullMarkedExtension>().sourceSets.names)
+        .contains(SourceSet.MAIN_SOURCE_SET_NAME)
+  }
+
+  @Test
+  fun `does not register a task for an unconfigured source set`() {
+    applyPlugins()
+
+    assertThat(project.tasks.findByName("generateTestPackageInfo")).isNull()
+  }
+
+  @Test
+  fun `registers a name-derived task for a configured source set`() {
+    applyPlugins()
+    project.extensions.getByType<NullMarkedExtension>().sourceSet("test") {}
+
+    val task = project.tasks.getByName("generateTestPackageInfo")
+
+    assertThat(task).isInstanceOf(GeneratePackageInfoTask::class.java)
+  }
+
+  @Test
+  fun `adds generated directory to a configured non-main source set`() {
+    applyPlugins()
+    project.extensions.getByType<NullMarkedExtension>().sourceSet("test") {}
+
+    val testSourceSet =
+        project.extensions.getByType<JavaPluginExtension>().sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME)
+    val expected = project.layout.buildDirectory.dir("generated/sources/nullmarked/java/test").get().asFile
+
+    assertThat(testSourceSet.java.srcDirs).contains(expected)
+  }
+
+  @Test
+  fun `adds jspecify to testCompileOnly for a configured test source set`() {
+    applyPlugins()
+    project.extensions.getByType<NullMarkedExtension>().sourceSet("test") {}
+    // Graph resolution fires the withDependencies hook; missing repositories only make individual
+    // components unresolvable, which is irrelevant here.
+    project.configurations.getByName("testCompileClasspath").incoming.resolutionResult.root
+
+    val testCompileOnlyDependencies =
+        project.configurations.getByName("testCompileOnly").dependencies.map {
+          "${it.group}:${it.name}:${it.version}"
+        }
+
+    assertThat(testCompileOnlyDependencies).containsExactly("org.jspecify:jspecify:${JSPECIFY_VERSION}")
+  }
+
+  @Test
+  fun `non-main source set does not check api or compileOnlyApi for an existing declaration`() {
+    project.plugins.apply("java-library")
+    project.plugins.apply("io.github.malczuuu.nullmarked")
+    project.extensions.getByType<NullMarkedExtension>().sourceSet("test") {}
+    project.dependencies.add("api", "org.jspecify:jspecify:0.3.0")
+    project.configurations.getByName("testCompileClasspath").incoming.resolutionResult.root
+
+    val testCompileOnlyDependencies =
+        project.configurations.getByName("testCompileOnly").dependencies.map {
+          "${it.group}:${it.name}:${it.version}"
+        }
+
+    assertThat(testCompileOnlyDependencies).containsExactly("org.jspecify:jspecify:${JSPECIFY_VERSION}")
+  }
 }

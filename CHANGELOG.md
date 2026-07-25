@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][keepachangelog], and this project adheres to [Semantic Versioning][semver].
 
+## [Unreleased]
+
+### Added
+
+- Add `nullmarked { sourceSet("...") }` to opt other source sets (e.g. `test`) into `package-info.java` generation and
+  the auto-added `jspecify` dependency. The `main` source set is still processed by default.
+
 ## [0.2.1] - 2026-07-21
 
 ### Fixed

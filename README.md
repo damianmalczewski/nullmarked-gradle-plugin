@@ -11,6 +11,7 @@ Gradle plugin applying [JSpecify](https://jspecify.dev/)'s `@NullMarked` convent
 
 - [Why bother with NullMarked Plugin](#why-bother-with-nullmarked-plugin)
 - [Installation](#installation)
+    - [Configuring other source sets](#configuring-other-source-sets)
 - [Building](#building)
 - [Using local snapshot](#using-local-snapshot)
 
@@ -18,16 +19,17 @@ Gradle plugin applying [JSpecify](https://jspecify.dev/)'s `@NullMarked` convent
 
 Applying `io.github.malczuuu.nullmarked` to a Java project:
 
-1. **Generates `package-info.java`** - for every non-empty package of the `main` source set that does not declare its
-   own `package-info.java`, the `generatePackageInfo` task generates one annotated with `@NullMarked` into
-   `build/generated/sources/nullmarked/java/main`. The generated directory is registered as a source directory, so
-   `compileJava` picks it up automatically. Hand-written `package-info.java` files always win.
-2. **Adds the JSpecify dependency** - `org.jspecify:jspecify:1.0.0` is added as `compileOnly` unless the build script
-   already declares it in `compileOnly`, `implementation`, `api`, or `compileOnlyApi`.
+1. **Generates `package-info.java`** - for every non-empty package of each configured source set.
+2. Adds tasks that generate one annotated with `@NullMarked` into `build/generated/sources/nullmarked/java/<sourceSet>`.
+   The generated directory is registered as a source directory, so `compileJava`/`compileTestJava`/etc. pick it up
+   automatically. Hand-written `package-info.java` files always win.
+3. **Adds the JSpecify dependency** - `org.jspecify:jspecify:1.0.0` is added as a `compileOnly`-equivalent dependency
+   (`compileOnly`, `testCompileOnly`, etc.) of each configured source set, unless the build script already declares it
+   there itself (`main` also checks `api`/`compileOnlyApi`).
 
-Together with [Error Prone](https://errorprone.info) and [NullAway](https://github.com/uber/NullAway), it helps
-protect the project against nullness bugs without hand-writing an annotated `package-info.java` for every package -
-see [`examples/`](examples) for sample working setups, including Kotlin interop.
+Together with [Error Prone](https://errorprone.info) and [NullAway](https://github.com/uber/NullAway), it helps protect
+the project against nullness bugs without hand-writing an annotated `package-info.java` for every package - see [
+`examples/`](examples) for sample working setups, including Kotlin interop.
 
 ## Installation
 
@@ -61,10 +63,29 @@ nullmarked {
 
 `excludedPackages` follows [ArchUnit's package identifier syntax](https://www.archunit.org/userguide/html/000_Index.html):
 
-- `org.acme` excludes only `org.acme`, 
+- `org.acme` excludes only `org.acme`,
 - `org.acme..` excludes `org.acme` and all its subpackages,
 - `..internal..` excludes any package containing an `internal` segment,
 - `*` matches within a single segment.
+
+### Configuring other source sets
+
+By default, only `main` is processed. Use `sourceSet("...")` to opt other source sets in, e.g. `test`:
+
+```kotlin
+nullmarked {
+    sourceSet("test") {
+        // same three properties as above, each defaulting to the top-level value
+        enabled = true
+        headerEnabled = true
+        excludedPackages = listOf()
+    }
+}
+```
+
+Each `sourceSet` block inherits `enabled`, `headerEnabled` and `excludedPackages` from the top-level `nullmarked { }`
+configuration and only needs to set what it wants to override. To opt a source set in without overriding anything, drop
+the block: `sourceSet("test")`.
 
 ## Building
 

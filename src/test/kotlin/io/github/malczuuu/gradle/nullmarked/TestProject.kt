@@ -37,6 +37,9 @@ class TestProject(val dir: File) {
   fun writeSource(relativePath: String, content: String = "class Placeholder {}"): File =
       write("src/main/java/$relativePath", content)
 
+  fun writeTestSource(relativePath: String, content: String = "class Placeholder {}"): File =
+      write("src/test/java/$relativePath", content)
+
   fun appendToBuildScript(content: String) {
     file("build.gradle.kts").appendText("\n" + content.trimIndent() + "\n")
   }
@@ -106,8 +109,8 @@ class TestProject(val dir: File) {
   fun runner(vararg arguments: String): GradleRunner =
       GradleRunner.create().withProjectDir(dir).withPluginClasspath().withArguments(*arguments)
 
-  fun generatedPackageInfo(packageName: String): File =
-      packageInfoUnder(file("build/generated/sources/nullmarked/java/main"), packageName)
+  fun generatedPackageInfo(packageName: String, sourceSet: String = "main"): File =
+      packageInfoUnder(file("build/generated/sources/nullmarked/java/$sourceSet"), packageName)
 
   fun compiledClass(binaryName: String): File = file("build/classes/java/main/${binaryName.replace('.', '/')}.class")
 

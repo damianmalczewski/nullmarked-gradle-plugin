@@ -113,6 +113,121 @@ class NullMarkedPluginFunctionalTest {
   }
 
   @Test
+  fun `configured test source set gets its own generation task and dependency`() {
+    project.writeTestSource(
+        "com/acme/FooTest.java",
+        """
+        package com.acme;
+
+        class FooTest {}
+        """,
+    )
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            sourceSet("test") {}
+        }
+        """
+    )
+
+    val result = project.runner("compileTestJava").build()
+
+    assertThat(result.task(":generateTestPackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(result.task(":compileTestJava")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(project.generatedPackageInfo("com.acme", sourceSet = "test")).exists()
+  }
+
+  @Test
+  fun `jspecify appears on the test compile classpath for a configured test source set`() {
+    project.writeTestSource(
+        "com/acme/FooTest.java",
+        """
+        package com.acme;
+
+        class FooTest {}
+        """,
+    )
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            sourceSet("test") {}
+        }
+        """
+    )
+
+    val result = project.runner("dependencies", "--configuration", "testCompileClasspath").build()
+
+    assertThat(result.output).contains("org.jspecify:jspecify:1.0.0")
+  }
+
+  @Test
+  fun `custom main21 source set for a multi-release jar gets generation and dependency`() {
+    project.writeSource(
+        "com/acme/main/Foo.java",
+        """
+        package com.acme.main;
+
+        class Foo {}
+        """,
+    )
+    project.write(
+        "src/main21/java/com/acme/main21/Foo21.java",
+        """
+        package com.acme.main21;
+
+        class Foo21 {}
+        """,
+    )
+    project.appendToBuildScript(
+        """
+        sourceSets {
+            create("main21") {
+                java.srcDir("src/main21/java")
+            }
+        }
+
+        // Mirrors a real multi-release-jar setup: main compiles at the project's default toolchain
+        // (17 here), main21 pins its own compile task to JDK 21.
+        tasks.named<org.gradle.api.tasks.compile.JavaCompile>("compileMain21Java") {
+            javaCompiler = javaToolchains.compilerFor {
+                languageVersion = org.gradle.jvm.toolchain.JavaLanguageVersion.of(21)
+            }
+        }
+
+        nullmarked {
+            sourceSet("main21") {}
+        }
+        """
+    )
+
+    val result = project.runner("compileJava", "compileMain21Java").build()
+
+    assertThat(result.task(":generatePackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(result.task(":compileJava")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(project.generatedPackageInfo("com.acme.main")).exists()
+
+    assertThat(result.task(":generateMain21PackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(result.task(":compileMain21Java")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(project.generatedPackageInfo("com.acme.main21", sourceSet = "main21")).exists()
+  }
+
+  @Test
+  fun `unconfigured source sets are not touched`() {
+    project.writeTestSource(
+        "com/acme/FooTest.java",
+        """
+        package com.acme;
+
+        class FooTest {}
+        """,
+    )
+
+    val result = project.runner("tasks", "--all").build()
+
+    assertThat(result.output).doesNotContain("generateTestPackageInfo")
+  }
+
+  @Test
   fun `disabling generation removes previously generated files`() {
     project.runner("generatePackageInfo").build()
     assertThat(project.generatedPackageInfo("com.acme")).exists()

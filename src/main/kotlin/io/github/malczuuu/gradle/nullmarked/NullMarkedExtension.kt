@@ -16,11 +16,15 @@
 
 package io.github.malczuuu.gradle.nullmarked
 
+import javax.inject.Inject
+import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 
 /** Configuration for the NullMarked plugin, available in build scripts as `nullmarked { ... }`. */
-abstract class NullMarkedExtension {
+abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
 
   /**
    * Whether `package-info.java` files annotated with `@NullMarked` should be generated for non-empty packages that do
@@ -44,4 +48,43 @@ abstract class NullMarkedExtension {
    * as a `compileOnly` dependency when the build script does not declare JSpecify itself. Defaults to `"1.0.0"`.
    */
   abstract val jspecifyVersion: Property<String>
+
+  /**
+   * Per-`SourceSet` overrides, keyed by source set name. The `main` source set is always present, even if never
+   * configured explicitly. Each element's [NullMarkedSourceSetSpec.enabled], [NullMarkedSourceSetSpec.headerEnabled]
+   * and [NullMarkedSourceSetSpec.excludedPackages] default to this extension's own values of the same name.
+   */
+  val sourceSets: NamedDomainObjectContainer<NullMarkedSourceSetSpec> =
+      objects.domainObjectContainer(NullMarkedSourceSetSpec::class.java) { name ->
+        objects.newInstance(NullMarkedSourceSetSpec::class.java, name)
+      }
+
+  init {
+    sourceSets.all {
+      enabled.convention(this@NullMarkedExtension.enabled)
+      headerEnabled.convention(this@NullMarkedExtension.headerEnabled)
+      excludedPackages.convention(this@NullMarkedExtension.excludedPackages)
+    }
+  }
+
+  /**
+   * Opts the source set named [name] into `nullmarked` processing, creating its [NullMarkedSourceSetSpec] (with
+   * defaults inherited from this extension's top-level properties) if it isn't already present.
+   *
+   * @param name name of the Gradle `SourceSet` to opt in, e.g. `"main21"`
+   */
+  fun sourceSet(name: String) {
+    sourceSets.maybeCreate(name)
+  }
+
+  /**
+   * Configures the [NullMarkedSourceSetSpec] for the source set named [name], creating it (with defaults inherited from
+   * this extension's top-level properties) if it isn't already present.
+   *
+   * @param name name of the Gradle `SourceSet` to configure, e.g. `"main"` or `"test"`
+   * @param configuration action applied to the source set's spec
+   */
+  fun sourceSet(name: String, configuration: Action<in NullMarkedSourceSetSpec>) {
+    configuration.execute(sourceSets.maybeCreate(name))
+  }
 }

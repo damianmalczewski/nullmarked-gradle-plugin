@@ -21,6 +21,7 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.javadoc.Javadoc
 import org.gradle.kotlin.dsl.create
@@ -31,10 +32,10 @@ import org.gradle.kotlin.dsl.withType
 /**
  * Applies JSpecify's `NullMarked` convention to a Java project:
  *
- * - generates a `@NullMarked` `package-info.java` for every non-empty package of the `main` source set that does not
- *   declare one (configurable via the `nullmarked` extension),
- * - adds `org.jspecify:jspecify` as a `compileOnly` dependency unless the build script declares a JSpecify dependency
- *   itself.
+ * - generates a `@NullMarked` `package-info.java` for every non-empty package of each configured source set (`main`
+ *   always, others via the `nullmarked { sourceSet("...") { ... } }` DSL) that does not declare one,
+ * - adds `org.jspecify:jspecify` as a `compileOnly`-equivalent dependency of each configured source set unless the
+ *   build script declares a JSpecify dependency itself.
  */
 open class NullMarkedPlugin : Plugin<Project> {
 
@@ -49,37 +50,48 @@ open class NullMarkedPlugin : Plugin<Project> {
     extension.headerEnabled.convention(true)
     extension.excludedPackages.convention(emptyList())
     extension.jspecifyVersion.convention(JSPECIFY_VERSION)
+    extension.sourceSets.maybeCreate(SourceSet.MAIN_SOURCE_SET_NAME)
 
     target.plugins.withType<JavaPlugin> {
-      configurePackageInfoGeneration(target, extension)
-      configureDefaultDependency(target, extension)
+      val javaSourceSets = target.extensions.getByType<JavaPluginExtension>().sourceSets
+
+      extension.sourceSets.all {
+        val spec = this
+        javaSourceSets
+            .matching { it.name == spec.name }
+            .all {
+              configurePackageInfoGeneration(target, this, spec)
+              configureDefaultDependency(target, this, spec, extension.jspecifyVersion)
+            }
+      }
     }
   }
 
-  private fun configurePackageInfoGeneration(project: Project, extension: NullMarkedExtension) {
-    val mainSourceSet =
-        project.extensions.getByType<JavaPluginExtension>().sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
-
-    val outputDir = project.layout.buildDirectory.dir("generated/sources/nullmarked/java/${mainSourceSet.name}")
+  private fun configurePackageInfoGeneration(
+      project: Project,
+      javaSourceSet: SourceSet,
+      spec: NullMarkedSourceSetSpec,
+  ) {
+    val outputDir = project.layout.buildDirectory.dir("generated/sources/nullmarked/java/${javaSourceSet.name}")
     val outputDirFile = outputDir.get().asFile
 
     val generateTask =
-        project.tasks.register<GeneratePackageInfoTask>(TASK_NAME) {
+        project.tasks.register<GeneratePackageInfoTask>(javaSourceSet.getTaskName("generate", "packageInfo")) {
           group = "generation"
           description = "Generates @NullMarked package-info.java files for packages missing them."
 
           // Scan only the hand-written source directories, not our own output.
-          val inputDirFiles = project.provider { mainSourceSet.java.srcDirs - outputDirFile }
+          val inputDirFiles = project.provider { javaSourceSet.java.srcDirs - outputDirFile }
 
           sourceDirectories.from(inputDirFiles)
-          generationEnabled.set(extension.enabled)
-          headerEnabled.set(extension.headerEnabled)
-          excludedPackages.set(extension.excludedPackages)
+          generationEnabled.set(spec.enabled)
+          headerEnabled.set(spec.headerEnabled)
+          excludedPackages.set(spec.excludedPackages)
 
           outputDirectory.set(outputDir)
         }
 
-    mainSourceSet.java.srcDir(generateTask.flatMap(GeneratePackageInfoTask::outputDirectory))
+    javaSourceSet.java.srcDir(generateTask.flatMap(GeneratePackageInfoTask::outputDirectory))
 
     // Generated package-info.java only carries @NullMarked, not documentation; keep it out of Javadoc output.
     project.tasks.withType<Javadoc>().configureEach {
@@ -87,28 +99,44 @@ open class NullMarkedPlugin : Plugin<Project> {
     }
   }
 
-  private fun configureDefaultDependency(project: Project, extension: NullMarkedExtension) {
-    project.configurations.getByName(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME).withDependencies {
-      val coordinate = parseJspecifyCoordinate(extension.jspecifyVersion.get())
+  private fun configureDefaultDependency(
+      project: Project,
+      javaSourceSet: SourceSet,
+      spec: NullMarkedSourceSetSpec,
+      jspecifyVersion: Provider<String>,
+  ) {
+    project.configurations.getByName(javaSourceSet.compileOnlyConfigurationName).withDependencies {
+      val coordinate = parseJspecifyCoordinate(jspecifyVersion.get())
       if (jspecifyDeclaredIn(this, coordinate)) {
         return@withDependencies
       }
       val declaredElsewhere =
-          listOf(
-                  JavaPlugin.API_CONFIGURATION_NAME,
-                  JavaPlugin.COMPILE_ONLY_API_CONFIGURATION_NAME,
-                  JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME,
-                  JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME,
-              )
-              .any { name ->
-                val configuration = project.configurations.findByName(name)
-                configuration != null && jspecifyDeclaredIn(configuration.dependencies, coordinate)
-              }
+          candidateConfigurationNames(javaSourceSet).any { name ->
+            val configuration = project.configurations.findByName(name)
+            configuration != null && jspecifyDeclaredIn(configuration.dependencies, coordinate)
+          }
       if (!declaredElsewhere) {
         add(project.dependencies.create("${coordinate.group}:${coordinate.name}:${coordinate.version}"))
       }
     }
   }
+
+  /**
+   * Configuration names checked for an existing JSpecify declaration before adding one. `main` also checks `api` and
+   * `compileOnlyApi`, which the `java-library` plugin only creates for `main`; other source sets have no such
+   * equivalent by convention, so only their own `compileOnly`/`implementation` configurations are checked.
+   */
+  private fun candidateConfigurationNames(sourceSet: SourceSet): List<String> =
+      if (sourceSet.name == SourceSet.MAIN_SOURCE_SET_NAME) {
+        listOf(
+            JavaPlugin.API_CONFIGURATION_NAME,
+            JavaPlugin.COMPILE_ONLY_API_CONFIGURATION_NAME,
+            sourceSet.compileOnlyConfigurationName,
+            sourceSet.implementationConfigurationName,
+        )
+      } else {
+        listOf(sourceSet.compileOnlyConfigurationName, sourceSet.implementationConfigurationName)
+      }
 
   private fun jspecifyDeclaredIn(dependencies: Iterable<Dependency>, coordinate: JSpecifyCoordinate): Boolean =
       dependencies.any {

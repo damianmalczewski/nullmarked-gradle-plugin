@@ -28,9 +28,6 @@ internal const val JSPECIFY_GROUP = "org.jspecify"
 /** Name of the default `org.jspecify:jspecify` dependency coordinate. */
 internal const val JSPECIFY_NAME = "jspecify"
 
-/** Name the `GeneratePackageInfoTask` is registered under. */
-internal const val TASK_NAME = "generatePackageInfo"
-
 /** ArchUnit-style package identifier syntax accepted by [PackagePattern.of]. */
 internal val VALID_IDENTIFIER = Regex("""(\.\.)?[\w*]+((\.|\.\.)[\w*]+)*(\.\.)?|\.\.""")
 
