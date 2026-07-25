@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog][keepachangelog], and this project adhe
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-25
+
 ### Added
 
 - Add a `verifyPackageInfo` task per configured source set (`verifyTestPackageInfo`, etc.), run before compilation,

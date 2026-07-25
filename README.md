@@ -11,9 +11,9 @@ Gradle plugin applying [JSpecify](https://jspecify.dev/)'s `@NullMarked` convent
 
 - [Why bother with NullMarked Plugin](#why-bother-with-nullmarked-plugin)
 - [Installation](#installation)
-    - [Choosing which packages are processed](#choosing-which-packages-are-processed)
-    - [Verifying instead of generating](#verifying-instead-of-generating)
-    - [Configuring other source sets](#configuring-other-source-sets)
+    - [Selecting packages](#selecting-packages)
+    - [Verify-Only Mode](#verify-only-mode)
+    - [Additional source sets](#additional-source-sets)
 - [Building](#building)
 - [Using local snapshot](#using-local-snapshot)
 - [License](#license)
@@ -43,7 +43,7 @@ Apply plugin in `build.gradle.kts`.
 ```kotlin
 plugins {
     java
-    id("io.github.malczuuu.nullmarked") version "0.3.0"
+    id("io.github.malczuuu.nullmarked") version "0.4.0"
 }
 ```
 
@@ -79,7 +79,7 @@ Package identifiers follow [ArchUnit's syntax](https://www.archunit.org/userguid
 - `..internal..` matches any package containing an `internal` segment,
 - `*` matches within a single segment.
 
-### Choosing which packages are processed
+### Selecting packages
 
 `exclude(...)` and `include(...)` append to one ordered list of rules, and the **last** rule matching a package decides
 whether it is processed. A package no rule matches is processed, so without any rules every package is - `include` only
@@ -110,7 +110,7 @@ nullmarked {
 }
 ```
 
-### Verifying instead of generating
+### Verify-Only Mode
 
 Every configured source set gets a `verifyPackageInfo` task (`verifyTestPackageInfo`, `verifyMain21PackageInfo`, etc.)
 that `compileJava` depends on. It fails the build listing every package that has Java files but no `package-info.java`,
@@ -130,7 +130,7 @@ nullmarked {
 | `true`    | `true`       | off, previous output is deleted | on (fails on gaps) |
 | `false`   | any          | off, previous output is deleted | off                |
 
-### Configuring other source sets
+### Additional source sets
 
 By default, only `main` is processed. Use `sourceSet("...")` to opt other source sets in, e.g. `test`:
 
@@ -184,7 +184,7 @@ ones. To opt a source set in without overriding anything, drop the block: `sourc
    ```kotlin
    plugins {
        java
-       id("io.github.malczuuu.nullmarked") version "0.3.1-SNAPSHOT"
+       id("io.github.malczuuu.nullmarked") version "0.4.1-SNAPSHOT"
    }
    ```
 
