@@ -2,7 +2,7 @@ import net.ltgt.gradle.errorprone.errorprone
 
 plugins {
     java
-    id("io.github.malczuuu.nullmarked") version "0.2.1"
+    id("io.github.malczuuu.nullmarked") version "0.3.0"
     id("net.ltgt.errorprone") version "5.1.0"
 }
 

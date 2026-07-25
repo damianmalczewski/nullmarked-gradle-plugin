@@ -38,7 +38,7 @@ Apply plugin in `build.gradle.kts`.
 ```kotlin
 plugins {
     java
-    id("io.github.malczuuu.nullmarked") version "0.2.1"
+    id("io.github.malczuuu.nullmarked") version "0.3.0"
 }
 ```
 
@@ -117,7 +117,7 @@ the block: `sourceSet("test")`.
    ```kotlin
    plugins {
        java
-       id("io.github.malczuuu.nullmarked") version "0.2.2-SNAPSHOT"
+       id("io.github.malczuuu.nullmarked") version "0.3.1-SNAPSHOT"
    }
    ```
 
