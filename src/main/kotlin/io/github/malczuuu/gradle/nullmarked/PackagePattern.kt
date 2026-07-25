@@ -49,20 +49,21 @@ internal class PackagePattern private constructor(private val regex: Regex) {
         return """\w+(?:\.\w+)*"""
       }
       val parts = identifier.split("..")
-      return buildString {
-        parts.forEachIndexed { index, part ->
-          when {
-            part.isEmpty() && index == 0 -> append("""(?:\w+\.)*""") // leading '..': any parent packages
-            part.isEmpty() -> append("""(?:\.\w+)*""") // trailing '..': any subpackages
-            else -> {
-              if (index > 0 && parts[index - 1].isNotEmpty()) {
-                append("""\.(?:\w+\.)*""") // middle '..': the separating dot plus any packages in between
-              }
-              append(part.split('.').joinToString("""\.""") { segment -> segment.replace("*", """\w+""") })
-            }
-          }
-        }
+      return parts.indices.joinToString("") { index -> partToRegex(parts, index) }
+    }
+
+    private fun partToRegex(parts: List<String>, index: Int): String {
+      val part = parts[index]
+      if (part.isEmpty()) {
+        return if (index == 0) """(?:\w+\.)*""" else """(?:\.\w+)*""" // leading/trailing '..'
       }
+      val separator =
+          if (index > 0 && parts[index - 1].isNotEmpty()) {
+            """\.(?:\w+\.)*""" // middle '..': the separating dot plus any packages in between
+          } else {
+            ""
+          }
+      return separator + part.split('.').joinToString("""\.""") { segment -> segment.replace("*", """\w+""") }
     }
   }
 }
