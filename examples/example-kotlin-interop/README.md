@@ -86,10 +86,9 @@ plugins {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
     compilerOptions {
-        // Kotlin defaults to "strict" for org.jspecify.annotations since 2.1.0; set explicitly so this build
-        // doesn't silently change behavior if that default ever changes.
+        // Kotlin defaults to "strict" for org.jspecify.annotations since 2.1.0; set explicitly for reference.
         freeCompilerArgs.add("-Xnullability-annotations=@org.jspecify.annotations:strict")
     }
 }

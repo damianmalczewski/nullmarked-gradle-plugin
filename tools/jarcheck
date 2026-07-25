@@ -10,14 +10,14 @@
 echo "===================================================="
 echo "Verifying Java version for classes within JAR files."
 echo ""
-echo "  gradle-nullmarked-plugin must be 52 (Java 8)"
+echo "  nullmarked-gradle-plugin must be 52 (Java 8)"
 echo ""
 echo "Note that JAR files must exist (./gradlew build)."
 echo ""
 
-echo "===== gradle-nullmarked-plugin ===="
+echo "===== nullmarked-gradle-plugin ===="
 javap \
     -verbose \
-    -classpath build/libs/gradle-nullmarked-plugin-*-SNAPSHOT.jar \
+    -classpath build/libs/nullmarked-gradle-plugin-*-SNAPSHOT.jar \
     io.github.malczuuu.gradle.nullmarked.NullMarkedPlugin \
     | grep "major version"

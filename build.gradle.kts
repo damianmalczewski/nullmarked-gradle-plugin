@@ -19,7 +19,7 @@ plugins {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -30,7 +30,7 @@ tasks.named<JavaCompile>("compileJava").configure {
 
 kotlin {
     jvmToolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
     compilerOptions {
         apiVersion = KotlinVersion.KOTLIN_1_9
@@ -209,6 +209,18 @@ spotless {
         ktlint("1.8.0").editorConfigOverride(mapOf("max_line_length" to "120"))
         endWithNewline()
         lineEndings = LineEnding.UNIX
+    }
+}
+
+tasks.withType<Jar>().configureEach {
+    manifest {
+        attributes["Implementation-Title"] = project.name
+        attributes["Implementation-Version"] = project.version
+        attributes["Created-By"] = "Gradle ${gradle.gradleVersion}"
+    }
+    from("${rootProject.rootDir}/LICENSE") {
+        into("META-INF/")
+        rename { "LICENSE.txt" }
     }
 }
 

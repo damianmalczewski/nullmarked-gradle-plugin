@@ -75,10 +75,6 @@ plugins {
     id("io.github.malczuuu.nullmarked") version "0.2.1"
 }
 
-nullmarked {
-    enabled = true
-}
-
 dependencies {
     errorprone("com.google.errorprone:error_prone_core:2.50.0")
     errorprone("com.uber.nullaway:nullaway:0.13.8")

@@ -2,8 +2,8 @@ import net.ltgt.gradle.errorprone.errorprone
 
 plugins {
     java
-    id("net.ltgt.errorprone") version "5.1.0"
     id("io.github.malczuuu.nullmarked") version "0.2.1"
+    id("net.ltgt.errorprone") version "5.1.0"
 }
 
 java {
