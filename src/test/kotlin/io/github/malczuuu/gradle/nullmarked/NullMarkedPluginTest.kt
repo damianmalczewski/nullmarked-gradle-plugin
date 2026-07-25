@@ -19,7 +19,6 @@ package io.github.malczuuu.gradle.nullmarked
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.SourceSet
@@ -155,7 +154,7 @@ class NullMarkedPluginTest {
     applyPlugins()
     project.extensions.getByType<NullMarkedExtension>().jspecifyVersion.set("org.jspecify:jspecify")
 
-    assertThatThrownBy { compileOnlyDependencies() }.isInstanceOf(InvalidUserDataException::class.java)
+    assertThatThrownBy { compileOnlyDependencies() }.isInstanceOf(InvalidInputException::class.java)
   }
 
   @Test

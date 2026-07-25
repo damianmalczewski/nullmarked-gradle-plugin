@@ -18,7 +18,6 @@ package io.github.malczuuu.gradle.nullmarked
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.gradle.api.InvalidUserDataException
 import org.junit.jupiter.api.Test
 
 class NullMarkedCommonsTest {
@@ -40,7 +39,7 @@ class NullMarkedCommonsTest {
   @Test
   fun `rejects notation with the wrong number of segments`() {
     assertThatThrownBy { parseJspecifyCoordinate("org.jspecify:jspecify") }
-        .isInstanceOf(InvalidUserDataException::class.java)
+        .isInstanceOf(InvalidInputException::class.java)
         .hasMessageContaining("org.jspecify:jspecify")
   }
 }

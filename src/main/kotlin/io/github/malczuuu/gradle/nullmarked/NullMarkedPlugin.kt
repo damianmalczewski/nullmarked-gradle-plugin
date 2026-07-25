@@ -61,7 +61,7 @@ open class NullMarkedPlugin : Plugin<Project> {
             .matching { it.name == spec.name }
             .all {
               configurePackageInfoGeneration(target, this, spec)
-              configureDefaultDependency(target, this, spec, extension.jspecifyVersion)
+              configureDefaultDependency(target, this, extension.jspecifyVersion)
             }
       }
     }
@@ -102,7 +102,6 @@ open class NullMarkedPlugin : Plugin<Project> {
   private fun configureDefaultDependency(
       project: Project,
       javaSourceSet: SourceSet,
-      spec: NullMarkedSourceSetSpec,
       jspecifyVersion: Provider<String>,
   ) {
     project.configurations.getByName(javaSourceSet.compileOnlyConfigurationName).withDependencies {

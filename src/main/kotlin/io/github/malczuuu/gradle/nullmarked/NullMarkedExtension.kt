@@ -22,6 +22,7 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.kotlin.dsl.newInstance
 
 /** Configuration for the NullMarked plugin, available in build scripts as `nullmarked { ... }`. */
 abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
@@ -56,7 +57,7 @@ abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
    */
   val sourceSets: NamedDomainObjectContainer<NullMarkedSourceSetSpec> =
       objects.domainObjectContainer(NullMarkedSourceSetSpec::class.java) { name ->
-        objects.newInstance(NullMarkedSourceSetSpec::class.java, name)
+        objects.newInstance<NullMarkedSourceSetSpec>(name)
       }
 
   init {

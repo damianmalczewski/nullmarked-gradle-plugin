@@ -19,6 +19,13 @@ package io.github.malczuuu.gradle.nullmarked
 import java.util.Properties
 import org.gradle.api.InvalidUserDataException
 
+/**
+ * Thrown when a user-supplied `nullmarked` parameter is malformed.
+ *
+ * @param message description of what was invalid and why
+ */
+internal class InvalidInputException(message: String) : InvalidUserDataException(message)
+
 /** Default value of `nullmarked.jspecifyVersion` used when the build script does not configure one. */
 internal const val JSPECIFY_VERSION = "1.0.0"
 
@@ -29,7 +36,7 @@ internal const val JSPECIFY_GROUP = "org.jspecify"
 internal const val JSPECIFY_NAME = "jspecify"
 
 /** ArchUnit-style package identifier syntax accepted by [PackagePattern.of]. */
-internal val VALID_IDENTIFIER = Regex("""(\.\.)?[\w*]+((\.|\.\.)[\w*]+)*(\.\.)?|\.\.""")
+internal val PACKAGE_IDENTIFIER_REGEX = Regex(PACKAGE_IDENTIFIER_PATTERN)
 
 /** Plugin version baked into the jar as a resource at build time; `unknown` if the resource is missing. */
 internal val PLUGIN_VERSION: String =
@@ -52,7 +59,7 @@ internal data class JSpecifyCoordinate(val group: String, val name: String, val 
  *
  * @param value `nullmarked.jspecifyVersion` value to parse
  * @return the resolved coordinate
- * @throws InvalidUserDataException if [value] is neither a bare version nor a full `group:name:version` notation
+ * @throws InvalidInputException if [value] is neither a bare version nor a full `group:name:version` notation
  */
 internal fun parseJspecifyCoordinate(value: String): JSpecifyCoordinate {
   val parts = value.split(":")
@@ -60,11 +67,13 @@ internal fun parseJspecifyCoordinate(value: String): JSpecifyCoordinate {
     1 -> JSpecifyCoordinate(JSPECIFY_GROUP, JSPECIFY_NAME, parts[0])
     3 -> JSpecifyCoordinate(parts[0], parts[1], parts[2])
     else ->
-        throw InvalidUserDataException(
+        throw InvalidInputException(
             "nullmarked.jspecifyVersion must be either a version (e.g. \"1.0.0\") or a full dependency notation " +
-                "(e.g. \"org.jspecify:jspecify:1.0.0\"), but was: \"$value\""
+                "(e.g. \"org.jspecify:jspecify:1.0.0\"), but was: \"$value\"."
         )
   }
 }
 
 private class ResourceAnchor
+
+private const val PACKAGE_IDENTIFIER_PATTERN = """(\.\.)?[\w*]+((\.|\.\.)[\w*]+)*(\.\.)?|\.\."""

@@ -57,23 +57,25 @@ internal fun findPackagesToGenerate(sourceDirectories: Iterable<File>, excludedP
   val packagesToGenerate = sortedSetOf<String>()
   val packagesWithPackageInfo = sortedSetOf<String>()
 
-  sourceDirectories.filter(File::isDirectory).forEach { sourceDir ->
-    sourceDir
-        .walkTopDown()
-        .filter { it.isFile && it.extension == "java" }
-        .forEach { file ->
-          val packageName = packageNameOf(sourceDir, file)
-          if (file.name == "package-info.java") {
-            packagesWithPackageInfo += packageName
-          } else if (packageName.isNotEmpty()) {
-            packagesToGenerate += packageName
-          }
-        }
-  }
+  sourceDirectories
+      .filter { it.isDirectory }
+      .forEach { sourceDir ->
+        sourceDir
+            .walkTopDown()
+            .filter { it.isFile && it.extension == "java" }
+            .forEach { file ->
+              val packageName = packageNameOf(sourceDir, file)
+              if (file.name == "package-info.java") {
+                packagesWithPackageInfo += packageName
+              } else if (packageName.isNotEmpty()) {
+                packagesToGenerate += packageName
+              }
+            }
+      }
 
   packagesToGenerate.removeAll(packagesWithPackageInfo)
 
-  val excludePatterns = excludedPackages.map(PackagePattern::of)
+  val excludePatterns = excludedPackages.map { PackagePattern.of(it) }
   packagesToGenerate.removeIf { packageName -> excludePatterns.any { it.matches(packageName) } }
 
   return packagesToGenerate

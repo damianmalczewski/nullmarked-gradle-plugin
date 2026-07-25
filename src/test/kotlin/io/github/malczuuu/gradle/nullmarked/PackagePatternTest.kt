@@ -91,9 +91,9 @@ class PackagePatternTest {
 
   @Test
   fun `rejects invalid identifiers`() {
-    assertThatThrownBy { PackagePattern.of("org...acme") }.isInstanceOf(IllegalArgumentException::class.java)
-    assertThatThrownBy { PackagePattern.of(".org.acme") }.isInstanceOf(IllegalArgumentException::class.java)
-    assertThatThrownBy { PackagePattern.of("org.acme.") }.isInstanceOf(IllegalArgumentException::class.java)
-    assertThatThrownBy { PackagePattern.of("") }.isInstanceOf(IllegalArgumentException::class.java)
+    assertThatThrownBy { PackagePattern.of("org...acme") }.isInstanceOf(InvalidInputException::class.java)
+    assertThatThrownBy { PackagePattern.of(".org.acme") }.isInstanceOf(InvalidInputException::class.java)
+    assertThatThrownBy { PackagePattern.of("org.acme.") }.isInstanceOf(InvalidInputException::class.java)
+    assertThatThrownBy { PackagePattern.of("") }.isInstanceOf(InvalidInputException::class.java)
   }
 }

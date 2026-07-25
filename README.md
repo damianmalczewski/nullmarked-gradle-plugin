@@ -96,6 +96,9 @@ the block: `sourceSet("test")`.
 
 ## Using local snapshot
 
+<details>
+<summary><b>Expand...</b></summary>
+
 1. Build project to local Maven repository.
    ```sh
    ./gradlew publishToMavenLocal
@@ -117,3 +120,5 @@ the block: `sourceSet("test")`.
        id("io.github.malczuuu.nullmarked") version "0.2.2-SNAPSHOT"
    }
    ```
+
+</details>

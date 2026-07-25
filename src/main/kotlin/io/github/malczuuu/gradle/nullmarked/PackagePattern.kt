@@ -37,10 +37,12 @@ internal class PackagePattern private constructor(private val regex: Regex) {
     /**
      * @param identifier package identifier in ArchUnit syntax (see class docs)
      * @return a pattern matching package names described by [identifier]
-     * @throws IllegalArgumentException if [identifier] is not a valid package identifier
+     * @throws InvalidInputException if [identifier] is not a valid package identifier
      */
     fun of(identifier: String): PackagePattern {
-      require(VALID_IDENTIFIER.matches(identifier)) { "Invalid package identifier '$identifier' [nullmarked plugin]." }
+      if (!PACKAGE_IDENTIFIER_REGEX.matches(identifier)) {
+        throw InvalidInputException("Invalid package identifier '$identifier'.")
+      }
       return PackagePattern(Regex(toRegex(identifier)))
     }
 
