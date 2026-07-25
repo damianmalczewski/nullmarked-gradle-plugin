@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog][keepachangelog], and this project adhe
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-25
+
 ### Added
 
 - Add `nullmarked { sourceSet("...") }` to opt other source sets (e.g. `test`) into `package-info.java` generation and
