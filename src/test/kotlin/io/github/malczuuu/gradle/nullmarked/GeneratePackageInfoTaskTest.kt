@@ -186,7 +186,7 @@ class GeneratePackageInfoTaskTest {
   fun `excludes a single package without touching its subpackages`() {
     writeSource("com/acme/Foo.java")
     writeSource("com/acme/util/Util.java")
-    task.excludedPackages.set(listOf("com.acme"))
+    task.packageSelectionRules.set(listOf("-com.acme"))
 
     task.generatePackageInfos()
 
@@ -199,7 +199,7 @@ class GeneratePackageInfoTaskTest {
     writeSource("com/acme/Foo.java")
     writeSource("com/acme/util/Util.java")
     writeSource("com/other/Bar.java")
-    task.excludedPackages.set(listOf("com.acme.."))
+    task.packageSelectionRules.set(listOf("-com.acme.."))
 
     task.generatePackageInfos()
 

@@ -27,10 +27,14 @@ Gradle plugin (`io.github.malczuuu.nullmarked`) applying JSpecify's `@NullMarked
   (`GeneratePackageInfoTask`) and `verifyPackageInfo` (`VerifyPackageInfoTask`), and adds the JSpecify dependency unless
   already declared in `api`/`compileOnlyApi`/`compileOnly`/`implementation`.
 - `GeneratePackageInfoTask` scans hand-written `main` source dirs (its own output dir excluded), writes one
-  `package-info.java` per package that has `.java` files but none of its own, minus `excludedPackages` matches.
+  `package-info.java` per package that has `.java` files but none of its own, minus what the package rules skip.
   Disabling (`enabled = false`) only deletes previously generated output - it doesn't skip the task.
-  `excludedPackages` uses ArchUnit's package-identifier syntax (`org.acme..`, `..internal..`, `*`), parsed by
-  `PackagePattern`.
+- Which packages are processed comes from `nullmarked { packages { exclude(...) include(...) } }`
+  (`NullMarkedPackagesSpec`), also available per source set. Rules keep declaration order, source-set ones after the
+  top-level ones, and the last rule matching a package wins (`PackageFilter`); unmatched packages are processed.
+  Identifiers use ArchUnit's syntax (`org.acme..`, `..internal..`, `*`), parsed by `PackagePattern`. `PackageRule` is
+  internal, so tasks take the rules encoded as `"-org.acme.."` / `"+org.acme.api"` strings in their `packageSelectionRules`
+  input - build scripts only ever see the DSL.
 - `VerifyPackageInfoTask` runs between generation and compilation (`compileJava` dependsOn it), scans the whole source
   set (generated output included) and throws `VerificationException` listing every package without a
   `package-info.java`. It writes a marker file under `build/tmp/nullmarked/<task>/` only so Gradle has an output to

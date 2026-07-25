@@ -90,7 +90,7 @@ class VerifyPackageInfoTaskTest {
     writeSource("com/acme/Foo.java")
 
     assertThatThrownBy { task.verifyPackageInfos() }
-        .hasMessageContaining("nullmarked.excludedPackages")
+        .hasMessageContaining("nullmarked.packages")
         .hasMessageNotContaining("verifyOnly")
   }
 
@@ -110,7 +110,7 @@ class VerifyPackageInfoTaskTest {
   @Test
   fun `passes when the only offending package is excluded`() {
     writeSource("com/acme/Foo.java")
-    task.excludedPackages.set(listOf("com.acme.."))
+    task.packageSelectionRules.set(listOf("-com.acme.."))
 
     assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
   }

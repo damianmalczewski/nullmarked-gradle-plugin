@@ -81,7 +81,7 @@ class PackageInfoCommonsTest {
     writeSource("com/acme/Foo.java")
     writeSource("com/other/Bar.java")
 
-    val result = computeExpectedPackageInfos(listOf(sourceDir), listOf("com.acme"), true, "1.2.3")
+    val result = computeExpectedPackageInfos(listOf(sourceDir), listOf("-com.acme"), true, "1.2.3")
 
     assertThat(result.keys).containsExactly("com.other")
   }
@@ -138,7 +138,7 @@ class PackageInfoCommonsTest {
     writeSource("com/acme/Foo.java")
     writeSource("com/acme/util/Util.java")
 
-    val result = findPackagesWithoutPackageInfo(listOf(sourceDir), listOf("com.acme"))
+    val result = findPackagesWithoutPackageInfo(listOf(sourceDir), listOf("-com.acme"))
 
     assertThat(result).containsExactly("com.acme.util")
   }
@@ -149,7 +149,7 @@ class PackageInfoCommonsTest {
     writeSource("com/acme/util/Util.java")
     writeSource("com/other/Bar.java")
 
-    val result = findPackagesWithoutPackageInfo(listOf(sourceDir), listOf("com.acme.."))
+    val result = findPackagesWithoutPackageInfo(listOf(sourceDir), listOf("-com.acme.."))
 
     assertThat(result).containsExactly("com.other")
   }

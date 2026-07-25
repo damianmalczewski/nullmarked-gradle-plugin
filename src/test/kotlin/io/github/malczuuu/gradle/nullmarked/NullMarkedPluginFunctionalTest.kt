@@ -102,7 +102,9 @@ class NullMarkedPluginFunctionalTest {
     project.appendToBuildScript(
         """
         nullmarked {
-            excludedPackages = listOf("com.acme..")
+            packages {
+                exclude("com.acme..")
+            }
         }
         """
     )
@@ -111,6 +113,85 @@ class NullMarkedPluginFunctionalTest {
 
     assertThat(result.task(":generatePackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(project.generatedPackageInfo("com.acme")).doesNotExist()
+  }
+
+  @Test
+  fun `package rules survive the configuration cache`() {
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            packages {
+                exclude("com.acme..")
+            }
+        }
+        """
+    )
+
+    project.runner("generatePackageInfo", "--configuration-cache").build()
+    val secondRun = project.runner("generatePackageInfo", "--configuration-cache").build()
+
+    assertThat(secondRun.output).contains("Configuration cache entry reused")
+    assertThat(project.generatedPackageInfo("com.acme")).doesNotExist()
+  }
+
+  @Test
+  fun `a later include re-admits an excluded package`() {
+    project.writeSource(
+        "com/acme/internal/Impl.java",
+        """
+        package com.acme.internal;
+
+        class Impl {}
+        """,
+    )
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            packages {
+                exclude("com.acme..")
+                include("com.acme.internal")
+            }
+        }
+        """
+    )
+
+    val result = project.runner("generatePackageInfo").build()
+
+    assertThat(result.task(":generatePackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(project.generatedPackageInfo("com.acme")).doesNotExist()
+    assertThat(project.generatedPackageInfo("com.acme.internal")).exists()
+  }
+
+  @Test
+  fun `source set rules apply after the top-level ones`() {
+    project.writeTestSource(
+        "com/acme/FooTest.java",
+        """
+        package com.acme;
+
+        class FooTest {}
+        """,
+    )
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            sourceSet("test") {
+                packages {
+                    include("com.acme")
+                }
+            }
+            packages {
+                exclude("com.acme..")
+            }
+        }
+        """
+    )
+
+    val result = project.runner("compileJava", "compileTestJava").build()
+
+    assertThat(result.task(":generateTestPackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(project.generatedPackageInfo("com.acme")).doesNotExist()
+    assertThat(project.generatedPackageInfo("com.acme", sourceSet = "test")).exists()
   }
 
   @Test
@@ -290,12 +371,14 @@ class NullMarkedPluginFunctionalTest {
   }
 
   @Test
-  fun `verifyOnly skips packages matched by excludedPackages`() {
+  fun `verifyOnly skips excluded packages`() {
     project.appendToBuildScript(
         """
         nullmarked {
             verifyOnly = true
-            excludedPackages = listOf("com.acme")
+            packages {
+                exclude("com.acme")
+            }
         }
         """
     )

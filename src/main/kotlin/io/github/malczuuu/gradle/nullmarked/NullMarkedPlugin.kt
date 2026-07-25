@@ -55,7 +55,6 @@ open class NullMarkedPlugin : Plugin<Project> {
     extension.enabled.convention(true)
     extension.headerEnabled.convention(true)
     extension.verifyOnly.convention(false)
-    extension.excludedPackages.convention(emptyList())
     extension.jspecifyVersion.convention(JSPECIFY_VERSION)
     extension.sourceSets.maybeCreate(SourceSet.MAIN_SOURCE_SET_NAME)
 
@@ -75,6 +74,15 @@ open class NullMarkedPlugin : Plugin<Project> {
     }
   }
 
+  /**
+   * Registers the generation task for [javaSourceSet], registers its output as a source directory of that source set
+   * and keeps the generated files out of Javadoc.
+   *
+   * @param project project the plugin is applied to
+   * @param javaSourceSet Java source set to generate for
+   * @param spec configuration of that source set
+   * @return the registered generation task
+   */
   private fun configurePackageInfoGeneration(
       project: Project,
       javaSourceSet: SourceSet,
@@ -92,11 +100,11 @@ open class NullMarkedPlugin : Plugin<Project> {
           val inputDirFiles = project.provider { javaSourceSet.java.srcDirs - outputDirFile }
 
           sourceDirectories.from(inputDirFiles)
-          // verifyOnly opts out of generated code; the source set is then expected to declare
-          // every package-info.java by hand and the verification task enforces it.
+          // verifyOnly opts out of generated code; the source set is then expected to declare every package-info.java
+          // by hand and the verification task enforces it.
           generationEnabled.set(spec.enabled.zip(spec.verifyOnly) { enabled, verifyOnly -> enabled && !verifyOnly })
           headerEnabled.set(spec.headerEnabled)
-          excludedPackages.set(spec.excludedPackages)
+          packageSelectionRules.set(spec.encodedPackageSelectionRules())
 
           outputDirectory.set(outputDir)
         }
@@ -115,6 +123,11 @@ open class NullMarkedPlugin : Plugin<Project> {
    * Registers the verification task for [javaSourceSet] and makes its compilation depend on it. The task scans the
    * whole source set, generated output included, so it verifies the end state in both the generating and the
    * `verifyOnly` setup.
+   *
+   * @param project project the plugin is applied to
+   * @param javaSourceSet Java source set to verify
+   * @param spec configuration of that source set
+   * @param generateTask generation task whose output the verification has to see
    */
   private fun configurePackageInfoVerification(
       project: Project,
@@ -134,7 +147,7 @@ open class NullMarkedPlugin : Plugin<Project> {
           sourceDirectories.from(project.provider { javaSourceSet.java.srcDirs })
           verificationEnabled.set(spec.enabled)
           verifyOnly.set(spec.verifyOnly)
-          excludedPackages.set(spec.excludedPackages)
+          packageSelectionRules.set(spec.encodedPackageSelectionRules())
 
           markerFile.set(project.layout.buildDirectory.file("tmp/nullmarked/$taskName/verification.txt"))
         }
@@ -142,6 +155,14 @@ open class NullMarkedPlugin : Plugin<Project> {
     project.tasks.named(javaSourceSet.compileJavaTaskName).configure { dependsOn(verifyTask) }
   }
 
+  /**
+   * Adds JSpecify to the `compileOnly`-equivalent configuration of [javaSourceSet], unless the build script already
+   * declares it in one of the configurations returned by [candidateConfigurationNames].
+   *
+   * @param project project the plugin is applied to
+   * @param javaSourceSet Java source set to add the dependency to
+   * @param jspecifyVersion configured version or full dependency notation
+   */
   private fun configureDefaultDependency(
       project: Project,
       javaSourceSet: SourceSet,
@@ -167,6 +188,9 @@ open class NullMarkedPlugin : Plugin<Project> {
    * Configuration names checked for an existing JSpecify declaration before adding one. `main` also checks `api` and
    * `compileOnlyApi`, which the `java-library` plugin only creates for `main`; other source sets have no such
    * equivalent by convention, so only their own `compileOnly`/`implementation` configurations are checked.
+   *
+   * @param sourceSet Java source set the dependency would be added to
+   * @return names of the configurations to check
    */
   private fun candidateConfigurationNames(sourceSet: SourceSet): List<String> =
       if (sourceSet.name == SourceSet.MAIN_SOURCE_SET_NAME) {
@@ -180,6 +204,14 @@ open class NullMarkedPlugin : Plugin<Project> {
         listOf(sourceSet.compileOnlyConfigurationName, sourceSet.implementationConfigurationName)
       }
 
+  /**
+   * Checks whether JSpecify is already declared, ignoring the version: a build script pinning another one still counts
+   * as declaring it.
+   *
+   * @param dependencies dependencies of a single configuration
+   * @param coordinate JSpecify coordinate the plugin would add
+   * @return whether a dependency with the same group and name is present
+   */
   private fun jspecifyDeclaredIn(dependencies: Iterable<Dependency>, coordinate: JSpecifyCoordinate): Boolean =
       dependencies.any {
         it.group == coordinate.group && it.name == coordinate.name

@@ -17,17 +17,21 @@
 package io.github.malczuuu.gradle.nullmarked
 
 import javax.inject.Inject
+import org.gradle.api.Action
 import org.gradle.api.Named
-import org.gradle.api.provider.ListProperty
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
+import org.gradle.kotlin.dsl.newInstance
 
 /**
  * Per-`SourceSet` overrides configured via `nullmarked { sourceSet("test") { ... } }`. Each property defaults to the
  * [NullMarkedExtension] top-level value of the same name; setting it here overrides only that source set.
  *
  * @param name name of the Gradle `SourceSet` this spec configures, e.g. `"main"` or `"test"`
+ * @param objects factory creating this spec's own `packages { ... }` block
  */
-abstract class NullMarkedSourceSetSpec @Inject constructor(private val name: String) : Named {
+abstract class NullMarkedSourceSetSpec @Inject constructor(private val name: String, objects: ObjectFactory) : Named {
 
   /** Whether `package-info.java` files are generated for this source set. Defaults to `nullmarked.enabled`. */
   abstract val enabled: Property<Boolean>
@@ -44,11 +48,41 @@ abstract class NullMarkedSourceSetSpec @Inject constructor(private val name: Str
    */
   abstract val verifyOnly: Property<Boolean>
 
-  /**
-   * Package identifiers excluded from generation for this source set, see [NullMarkedExtension.excludedPackages].
-   * Defaults to `nullmarked.excludedPackages`.
-   */
-  abstract val excludedPackages: ListProperty<String>
+  private val packagesSpec: NullMarkedPackagesSpec = objects.newInstance()
 
+  /** Package rules of this source set in declaration order, top-level ones first. */
+  internal val packageSelectionRules: Provider<List<PackageRule>> = packagesSpec.rules
+
+  /** @return name of the Gradle `SourceSet` this spec configures */
   override fun getName(): String = name
+
+  /**
+   * Configures which packages the plugin processes for this source set, see [NullMarkedPackagesSpec]. These rules are
+   * evaluated after the top-level `nullmarked { packages { ... } }` ones, so they can re-include what those excluded.
+   *
+   * @param configuration action applied to the package rules
+   */
+  fun packages(configuration: Action<in NullMarkedPackagesSpec>) {
+    configuration.execute(packagesSpec)
+  }
+
+  /**
+   * Adds the top-level rules ahead of this source set's own ones. Called by [NullMarkedExtension] right after this spec
+   * is created, while it is still empty, so that source set rules always come last however the build script orders the
+   * blocks.
+   *
+   * @param rules top-level package rules
+   */
+  internal fun inheritPackageSelectionRules(rules: Provider<List<PackageRule>>) {
+    packagesSpec.rules.addAll(rules)
+  }
+
+  /**
+   * Encodes [packageSelectionRules] for the tasks, which take them as plain strings, see [PackageRule.encode].
+   *
+   * @return this source set's rules in declaration order, encoded
+   */
+  internal fun encodedPackageSelectionRules(): Provider<List<String>> = packageSelectionRules.map { rules ->
+    rules.map { it.encode() }
+  }
 }

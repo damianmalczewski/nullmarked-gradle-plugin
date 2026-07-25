@@ -14,6 +14,28 @@ The format is based on [Keep a Changelog][keepachangelog], and this project adhe
   hand-written `package-info.java` files satisfy verification. Setting `enabled = false` turns both generation and
   verification off.
 
+### Changed
+
+- Replace `excludedPackages = listOf(...)` with a `packages { }` block offering `exclude(...)` and `include(...)`,
+  available at the top level and per source set. Rules keep declaration order and the last one matching a package wins,
+  so an `include` can carve an exception out of an earlier `exclude`; packages no rule matches are still processed. A
+  source set's rules are evaluated after the top-level ones regardless of the order the blocks appear in.
+
+  ```kotlin
+  // before
+  nullmarked {
+      excludedPackages = listOf("..internal..")
+  }
+
+  // after
+  nullmarked {
+      packages {
+          exclude("..internal..")
+          include("com.acme.internal.api")
+      }
+  }
+  ```
+
 ## [0.3.0] - 2026-07-25
 
 ### Added

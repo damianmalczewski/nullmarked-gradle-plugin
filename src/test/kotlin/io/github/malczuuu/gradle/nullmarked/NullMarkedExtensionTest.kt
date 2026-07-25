@@ -35,19 +35,18 @@ class NullMarkedExtensionTest {
     extension.enabled.convention(true)
     extension.headerEnabled.convention(true)
     extension.verifyOnly.convention(false)
-    extension.excludedPackages.convention(emptyList())
   }
 
   @Test
   fun `sourceSet spec inherits top-level defaults`() {
-    extension.excludedPackages.set(listOf("com.acme.."))
+    extension.packages { exclude("com.acme..") }
 
     val spec = extension.sourceSets.maybeCreate("test")
 
     assertThat(spec.enabled.get()).isTrue()
     assertThat(spec.headerEnabled.get()).isTrue()
     assertThat(spec.verifyOnly.get()).isFalse()
-    assertThat(spec.excludedPackages.get()).containsExactly("com.acme..")
+    assertThat(spec.encodedRules).containsExactly("-com.acme..")
   }
 
   @Test
@@ -72,26 +71,56 @@ class NullMarkedExtensionTest {
 
   @Test
   fun `sourceSet block overrides only the properties it sets`() {
-    extension.excludedPackages.set(listOf("com.acme.."))
+    extension.packages { exclude("com.acme..") }
 
     extension.sourceSet("test") { headerEnabled.set(false) }
     val spec = extension.sourceSets.getByName("test")
 
     assertThat(spec.headerEnabled.get()).isFalse()
     assertThat(spec.enabled.get()).isTrue()
-    assertThat(spec.excludedPackages.get()).containsExactly("com.acme..")
+    assertThat(spec.encodedRules).containsExactly("-com.acme..")
   }
 
   @Test
   fun `no-arg sourceSet opts a source set in without overriding anything`() {
-    extension.excludedPackages.set(listOf("com.acme.."))
+    extension.packages { exclude("com.acme..") }
 
     extension.sourceSet("main21")
     val spec = extension.sourceSets.getByName("main21")
 
     assertThat(spec.enabled.get()).isTrue()
     assertThat(spec.headerEnabled.get()).isTrue()
-    assertThat(spec.excludedPackages.get()).containsExactly("com.acme..")
+    assertThat(spec.encodedRules).containsExactly("-com.acme..")
+  }
+
+  @Test
+  fun `sourceSet rules follow the top-level ones whatever the block order`() {
+    extension.sourceSet("test") { packages { include("com.acme.internal") } }
+    extension.packages { exclude("..internal..") }
+
+    assertThat(extension.sourceSets.getByName("test").encodedRules)
+        .containsExactly("-..internal..", "+com.acme.internal")
+  }
+
+  @Test
+  fun `rules of repeated blocks accumulate in declaration order`() {
+    extension.packages { exclude("com.acme..") }
+    extension.packages {
+      include("com.acme.api")
+      exclude("com.acme.api.internal")
+    }
+
+    assertThat(extension.sourceSets.maybeCreate("test").encodedRules)
+        .containsExactly("-com.acme..", "+com.acme.api", "-com.acme.api.internal")
+  }
+
+  @Test
+  fun `sourceSet rules do not leak into other source sets`() {
+    extension.packages { exclude("com.acme..") }
+    extension.sourceSet("test") { packages { include("com.acme.fixtures") } }
+    extension.sourceSet("main21")
+
+    assertThat(extension.sourceSets.getByName("main21").encodedRules).containsExactly("-com.acme..")
   }
 
   @Test
@@ -105,4 +134,7 @@ class NullMarkedExtensionTest {
     assertThat(spec.headerEnabled.get()).isFalse()
     assertThat(extension.sourceSets).hasSize(1)
   }
+
+  private val NullMarkedSourceSetSpec.encodedRules: List<String>
+    get() = encodedPackageSelectionRules().get()
 }

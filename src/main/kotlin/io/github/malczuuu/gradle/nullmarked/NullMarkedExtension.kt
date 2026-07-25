@@ -20,8 +20,8 @@ import javax.inject.Inject
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.newInstance
 
 /** Configuration for the NullMarked plugin, available in build scripts as `nullmarked { ... }`. */
@@ -44,13 +44,10 @@ abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
    */
   abstract val verifyOnly: Property<Boolean>
 
-  /**
-   * Package identifiers excluded from `package-info.java` generation, following ArchUnit's package identifier syntax:
-   * `org.acme` excludes only `org.acme`, `org.acme..` excludes `org.acme` and all its subpackages, `..internal..`
-   * excludes any package containing an `internal` segment, `*` matches within a single segment. Defaults to an empty
-   * list.
-   */
-  abstract val excludedPackages: ListProperty<String>
+  private val packagesSpec: NullMarkedPackagesSpec = objects.newInstance()
+
+  /** Top-level package rules in declaration order, see [NullMarkedPackagesSpec]. */
+  internal val packageSelectionRules: Provider<List<PackageRule>> = packagesSpec.rules
 
   /**
    * Version of `org.jspecify:jspecify`, or a full `group:name:version` dependency notation (e.g. to use a fork), added
@@ -60,9 +57,9 @@ abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
 
   /**
    * Per-`SourceSet` overrides, keyed by source set name. The `main` source set is always present, even if never
-   * configured explicitly. Each element's [NullMarkedSourceSetSpec.enabled], [NullMarkedSourceSetSpec.headerEnabled],
-   * [NullMarkedSourceSetSpec.verifyOnly] and [NullMarkedSourceSetSpec.excludedPackages] default to this extension's own
-   * values of the same name.
+   * configured explicitly. Each element's [NullMarkedSourceSetSpec.enabled], [NullMarkedSourceSetSpec.headerEnabled]
+   * and [NullMarkedSourceSetSpec.verifyOnly] default to this extension's own values of the same name, and its `packages
+   * { ... }` rules are evaluated after the top-level ones.
    */
   val sourceSets: NamedDomainObjectContainer<NullMarkedSourceSetSpec> =
       objects.domainObjectContainer(NullMarkedSourceSetSpec::class.java) { name ->
@@ -74,8 +71,20 @@ abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
       enabled.convention(this@NullMarkedExtension.enabled)
       headerEnabled.convention(this@NullMarkedExtension.headerEnabled)
       verifyOnly.convention(this@NullMarkedExtension.verifyOnly)
-      excludedPackages.convention(this@NullMarkedExtension.excludedPackages)
+      // Adding the top-level rules while the spec is still empty puts them first, whatever order the build script
+      // declares the blocks in.
+      inheritPackageSelectionRules(this@NullMarkedExtension.packageSelectionRules)
     }
+  }
+
+  /**
+   * Configures which packages the plugin processes, see [NullMarkedPackagesSpec]. Rules of every block accumulate, in
+   * declaration order.
+   *
+   * @param configuration action applied to the package rules
+   */
+  fun packages(configuration: Action<in NullMarkedPackagesSpec>) {
+    configuration.execute(packagesSpec)
   }
 
   /**

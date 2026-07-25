@@ -11,10 +11,12 @@ Gradle plugin applying [JSpecify](https://jspecify.dev/)'s `@NullMarked` convent
 
 - [Why bother with NullMarked Plugin](#why-bother-with-nullmarked-plugin)
 - [Installation](#installation)
+    - [Choosing which packages are processed](#choosing-which-packages-are-processed)
     - [Verifying instead of generating](#verifying-instead-of-generating)
     - [Configuring other source sets](#configuring-other-source-sets)
 - [Building](#building)
 - [Using local snapshot](#using-local-snapshot)
+- [License](#license)
 
 ## Why bother with NullMarked Plugin
 
@@ -22,7 +24,7 @@ Applying `io.github.malczuuu.nullmarked` to a Java project:
 
 1. **Generates `package-info.java`** - for every non-empty package of each configured source set.
 2. Adds tasks that generate one annotated with `@NullMarked` into `build/generated/sources/nullmarked/java/<sourceSet>`.
-   The generated directory is registered as a source directory, so `compileJava` / `compileTestJava`/etc. pick it up
+   The generated directory is registered as a source directory, so `compileJava` / `compileTestJava` / etc. pick it up
    automatically. Hand-written `package-info.java` files always win.
 3. **Adds the JSpecify dependency** - `org.jspecify:jspecify:1.0.0` is added as a `compileOnly`-equivalent dependency
    (`compileOnly`, `testCompileOnly`, etc.) of each configured source set, unless the build script already declares it
@@ -31,8 +33,8 @@ Applying `io.github.malczuuu.nullmarked` to a Java project:
    and fails the build listing every package that ends up without a `package-info.java`, hand-written or generated.
 
 Together with [Error Prone](https://errorprone.info) and [NullAway](https://github.com/uber/NullAway), it helps protect
-the project against nullness bugs without hand-writing an annotated `package-info.java` for every package - see [
-`examples/`](examples) for sample working setups, including Kotlin interop.
+the project against nullness bugs without hand-writing an annotated `package-info.java` for every package - see
+[`examples/`](examples) for sample working setups, including Kotlin interop.
 
 ## Installation
 
@@ -63,23 +65,56 @@ nullmarked {
     // "group:name:version" notation to use a fork instead
     jspecifyVersion = "1.0.0"
 
-    // package identifiers excluded from generation
-    excludedPackages = listOf()
+    // which packages are processed; empty means all of them
+    packages {
+        exclude("com.acme.generated..")
+    }
 }
 ```
 
-`excludedPackages` follows [ArchUnit's package identifier syntax](https://www.archunit.org/userguide/html/000_Index.html):
+Package identifiers follow [ArchUnit's syntax](https://www.archunit.org/userguide/html/000_Index.html):
 
-- `org.acme` excludes only `org.acme`,
-- `org.acme..` excludes `org.acme` and all its subpackages,
-- `..internal..` excludes any package containing an `internal` segment,
+- `org.acme` matches only `org.acme`,
+- `org.acme..` matches `org.acme` and all its subpackages,
+- `..internal..` matches any package containing an `internal` segment,
 - `*` matches within a single segment.
+
+### Choosing which packages are processed
+
+`exclude(...)` and `include(...)` append to one ordered list of rules, and the **last** rule matching a package decides
+whether it is processed. A package no rule matches is processed, so without any rules every package is - `include` only
+exists to carve exceptions out of an earlier `exclude`:
+
+```kotlin
+nullmarked {
+    packages {
+        exclude("..internal..")             // skip every internal package
+        include("com.acme.internal.api")    // ... except this one
+    }
+}
+```
+
+A source set's own rules are evaluated after all top-level ones, no matter which block the build script declares first,
+so a source set can re-admit what the top level excluded:
+
+```kotlin
+nullmarked {
+    packages {
+        exclude("..internal..")
+    }
+    sourceSet("test") {
+        packages {
+            include("..internal..")   // test sources keep their internal packages
+        }
+    }
+}
+```
 
 ### Verifying instead of generating
 
 Every configured source set gets a `verifyPackageInfo` task (`verifyTestPackageInfo`, `verifyMain21PackageInfo`, etc.)
 that `compileJava` depends on. It fails the build listing every package that has Java files but no `package-info.java`,
-counting hand-written and generated ones alike and skipping whatever `excludedPackages` matches.
+counting hand-written and generated ones alike and skipping whatever the `packages { }` rules exclude.
 
 Set `verifyOnly = true` to opt out of generated code and only enforce hand-written `package-info.java` files:
 
@@ -102,18 +137,22 @@ By default, only `main` is processed. Use `sourceSet("...")` to opt other source
 ```kotlin
 nullmarked {
     sourceSet("test") {
-        // same four properties as above, each defaulting to the top-level value
+        // same three properties as above, each defaulting to the top-level value
         enabled = true
         verifyOnly = false
         headerEnabled = true
-        excludedPackages = listOf()
+
+        // rules appended after the top-level ones
+        packages {
+            exclude("com.acme.fixtures..")
+        }
     }
 }
 ```
 
-Each `sourceSet` block inherits `enabled`, `verifyOnly`, `headerEnabled` and `excludedPackages` from the top-level
-`nullmarked { }` configuration and only needs to set what it wants to override. To opt a source set in without overriding anything, drop
-the block: `sourceSet("test")`.
+Each `sourceSet` block inherits `enabled`, `verifyOnly` and `headerEnabled` from the top-level `nullmarked { }`
+configuration and only needs to set what it wants to override; its `packages { }` rules are appended to the top-level
+ones. To opt a source set in without overriding anything, drop the block: `sourceSet("test")`.
 
 ## Building
 
@@ -150,3 +189,10 @@ the block: `sourceSet("test")`.
    ```
 
 </details>
+
+## License
+
+This project is licensed under the Apache License, Version 2.0.
+
+This project is not affiliated with, sponsored by, or endorsed by Gradle or JSpecify. All product names, logos, and
+brands are property of their respective owners.
