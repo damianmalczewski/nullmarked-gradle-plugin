@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog][keepachangelog], and this project adhe
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-07-26
+
 ### Changed
 
 - Defer configuration-time work in plugin application: the `compileOnly` configuration and the generation output

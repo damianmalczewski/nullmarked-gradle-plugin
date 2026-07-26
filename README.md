@@ -43,7 +43,7 @@ Apply plugin in `build.gradle.kts`.
 ```kotlin
 plugins {
     java
-    id("io.github.malczuuu.nullmarked") version "0.4.0"
+    id("io.github.malczuuu.nullmarked") version "0.4.1"
 }
 ```
 
@@ -184,7 +184,7 @@ ones. To opt a source set in without overriding anything, drop the block: `sourc
    ```kotlin
    plugins {
        java
-       id("io.github.malczuuu.nullmarked") version "0.4.1-SNAPSHOT"
+       id("io.github.malczuuu.nullmarked") version "0.4.2-SNAPSHOT"
    }
    ```
 
