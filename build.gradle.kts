@@ -192,7 +192,7 @@ if (getBooleanProperty("sign")) {
 spotless {
     kotlin {
         target("src/**/*.kt")
-        licenseHeaderFile("${rootProject.rootDir}/gradle/license-header.kt")
+        licenseHeaderFile("${rootProject.rootDir}/gradle/LicenseHeader.kt")
 
         ktfmt("0.64").metaStyle().configure {
             it.setMaxWidth(120)

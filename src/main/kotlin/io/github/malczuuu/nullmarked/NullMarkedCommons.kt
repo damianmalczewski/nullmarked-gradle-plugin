@@ -26,16 +26,16 @@ import org.gradle.api.InvalidUserDataException
  */
 internal class InvalidInputException(message: String) : InvalidUserDataException(message)
 
-/** Default value of `nullmarked.jspecifyVersion` used when the build script does not configure one. */
-internal const val JSPECIFY_VERSION = "1.0.0"
-
 /** Group of the default `org.jspecify:jspecify` dependency coordinate. */
 internal const val JSPECIFY_GROUP = "org.jspecify"
 
 /** Name of the default `org.jspecify:jspecify` dependency coordinate. */
 internal const val JSPECIFY_NAME = "jspecify"
 
-/** ArchUnit-style package identifier syntax accepted by [PackagePattern.of]. */
+/** Default value of `nullmarked.jspecifyVersion` used when the build script does not configure one. */
+internal const val JSPECIFY_VERSION = "1.0.0"
+
+/** ArchUnit-style package identifier syntax accepted by [PackagePattern]. */
 internal val PACKAGE_IDENTIFIER_REGEX = Regex(PACKAGE_IDENTIFIER_PATTERN)
 
 /** Plugin version baked into the jar as a resource at build time; `unknown` if the resource is missing. */
@@ -61,7 +61,7 @@ internal data class JSpecifyCoordinate(val group: String, val name: String, val 
  * @return the resolved coordinate
  * @throws InvalidInputException if [value] is neither a bare version nor a full `group:name:version` notation
  */
-internal fun parseJspecifyCoordinate(value: String): JSpecifyCoordinate {
+internal fun parseJSpecifyCoordinate(value: String): JSpecifyCoordinate {
   val parts = value.split(":")
   return when (parts.size) {
     1 -> JSpecifyCoordinate(JSPECIFY_GROUP, JSPECIFY_NAME, parts[0])

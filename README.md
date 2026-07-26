@@ -1,9 +1,11 @@
-# NullMarked Gradle Plugin
+<h1 align="center">NullMarked Gradle Plugin</h1>
 
-[![CI](https://github.com/damianmalczewski/nullmarked-gradle-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/damianmalczewski/nullmarked-gradle-plugin/actions/workflows/ci.yml)
-[![Codecov](https://codecov.io/gh/damianmalczewski/nullmarked-gradle-plugin/graph/badge.svg?token=6NQ031426J)](https://codecov.io/gh/damianmalczewski/nullmarked-gradle-plugin)
-[![Gradle Plugin Portal Version](https://img.shields.io/gradle-plugin-portal/v/io.github.malczuuu.nullmarked)](https://plugins.gradle.org/plugin/io.github.malczuuu.nullmarked)
-[![License](https://img.shields.io/badge/license-Apache%202.0-green)](https://github.com/damianmalczewski/nullmarked-gradle-plugin/blob/main/LICENSE)
+<p align="center">
+  <a href="https://github.com/damianmalczewski/nullmarked-gradle-plugin/actions/workflows/ci.yml"><img src="https://github.com/damianmalczewski/nullmarked-gradle-plugin/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://codecov.io/gh/damianmalczewski/nullmarked-gradle-plugin"><img src="https://codecov.io/gh/damianmalczewski/nullmarked-gradle-plugin/graph/badge.svg?token=6NQ031426J" alt="Codecov"></a>
+  <a href="https://plugins.gradle.org/plugin/io.github.malczuuu.nullmarked"><img src="https://img.shields.io/gradle-plugin-portal/v/io.github.malczuuu.nullmarked" alt="Gradle Plugin Portal Version"></a>
+  <a href="https://github.com/damianmalczewski/nullmarked-gradle-plugin/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-green" alt="License"></a>
+</p>
 
 Gradle plugin applying [JSpecify](https://jspecify.dev/)'s `@NullMarked` convention to Java projects.
 
@@ -11,26 +13,24 @@ Gradle plugin applying [JSpecify](https://jspecify.dev/)'s `@NullMarked` convent
 
 - [Why bother with NullMarked Plugin](#why-bother-with-nullmarked-plugin)
 - [Installation](#installation)
-    - [Selecting packages](#selecting-packages)
+    - [Selecting Packages](#selecting-packages)
     - [Verify-Only Mode](#verify-only-mode)
-    - [Additional source sets](#additional-source-sets)
+    - [Additional Source Sets](#additional-source-sets)
 - [Building](#building)
-- [Using local snapshot](#using-local-snapshot)
+- [Using Local Snapshot](#using-local-snapshot)
 - [License](#license)
 
 ## Why bother with NullMarked Plugin
 
+The main goal of this plugin is to stop writing `package-info.java` files just to apply `@NullMarked` annotation to it.
+Let the plugin **generate one automatically** for all your packages.
+
 Applying `io.github.malczuuu.nullmarked` to a Java project:
 
-1. **Generates `package-info.java`** - for every non-empty package of each configured source set.
-2. Adds tasks that generate one annotated with `@NullMarked` into `build/generated/sources/nullmarked/java/<sourceSet>`.
-   The generated directory is registered as a source directory, so `compileJava` / `compileTestJava` / etc. pick it up
-   automatically. Hand-written `package-info.java` files always win.
-3. **Adds the JSpecify dependency** - `org.jspecify:jspecify:1.0.0` is added as a `compileOnly`-equivalent dependency
-   (`compileOnly`, `testCompileOnly`, etc.) of each configured source set, unless the build script already declares it
-   there itself (`main` also checks `api` / `compileOnlyApi`).
-4. **Verifies the result** - `verifyPackageInfo` (`verifyTestPackageInfo`, etc.) runs before the source set is compiled
-   and fails the build listing every package that ends up without a `package-info.java`, hand-written or generated.
+1. **Will generate `package-info.java`**, for every non-empty package that doesn't have one.
+2. **Adds the JSpecify dependency** as `compileOnly`, unless the build script already declares it there itself.
+3. **Registers generated directory as a source directory**, so `compileJava` picks it up automatically. Hand-written
+   `package-info.java` files always win.
 
 Together with [Error Prone](https://errorprone.info) and [NullAway](https://github.com/uber/NullAway), it helps protect
 the project against nullness bugs without hand-writing an annotated `package-info.java` for every package - see
@@ -79,7 +79,7 @@ Package identifiers follow [ArchUnit's syntax](https://www.archunit.org/userguid
 - `..internal..` matches any package containing an `internal` segment,
 - `*` matches within a single segment.
 
-### Selecting packages
+### Selecting Packages
 
 `exclude(...)` and `include(...)` append to one ordered list of rules, and the **last** rule matching a package decides
 whether it is processed. A package no rule matches is processed, so without any rules every package is - `include` only
@@ -130,7 +130,7 @@ nullmarked {
 | `true`    | `true`       | off, previous output is deleted | on (fails on gaps) |
 | `false`   | any          | off, previous output is deleted | off                |
 
-### Additional source sets
+### Additional Source Sets
 
 By default, only `main` is processed. Use `sourceSet("...")` to opt other source sets in, e.g. `test`:
 
@@ -161,7 +161,7 @@ ones. To opt a source set in without overriding anything, drop the block: `sourc
 ./gradlew integrationTest  # TestKit compatibility test; -Pcompat.gradle.version=9.0.0 targets a specific Gradle
 ```
 
-## Using local snapshot
+## Using Local Snapshot
 
 <details>
 <summary><b>Expand...</b></summary>

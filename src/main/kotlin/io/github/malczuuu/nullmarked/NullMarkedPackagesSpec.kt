@@ -19,6 +19,7 @@ package io.github.malczuuu.nullmarked
 import javax.inject.Inject
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
+import org.gradle.kotlin.dsl.listProperty
 
 /**
  * Which packages the plugin processes, configured via `nullmarked { packages { ... } }` (and the same block inside a
@@ -41,11 +42,13 @@ import org.gradle.api.provider.ListProperty
  * ```
  *
  * Package identifiers follow ArchUnit's syntax, see [PackagePattern].
+ *
+ * @param objects factory creating this spec's [rules] list
  */
 abstract class NullMarkedPackagesSpec @Inject constructor(objects: ObjectFactory) {
 
   /** Rules in declaration order, inherited ones first. */
-  internal val rules: ListProperty<PackageRule> = objects.listProperty(PackageRule::class.java)
+  internal val rules: ListProperty<PackageRule> = objects.listProperty<PackageRule>()
 
   /**
    * Skips the packages matching [packages], unless a later rule includes them again.
@@ -66,12 +69,6 @@ abstract class NullMarkedPackagesSpec @Inject constructor(objects: ObjectFactory
     addRules(included = true, packages = packages)
   }
 
-  /**
-   * Appends one rule per entry of [packages], preserving their order.
-   *
-   * @param included whether the rules include or exclude the packages they match
-   * @param packages package identifiers (ArchUnit syntax, see [PackagePattern])
-   */
   private fun addRules(included: Boolean, packages: Array<out String>) {
     rules.addAll(packages.map { PackageRule(included = included, identifier = it) })
   }

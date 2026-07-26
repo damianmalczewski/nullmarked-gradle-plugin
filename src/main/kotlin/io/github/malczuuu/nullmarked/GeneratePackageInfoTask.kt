@@ -39,6 +39,12 @@ import org.gradle.api.tasks.TaskAction
  * Generation is incremental: on each run, only packages whose expected content changed are (re)written and only stale
  * output (for packages that no longer need generation) is pruned, rather than wiping and regenerating the whole output
  * directory.
+ *
+ * The task is cacheable. [sourceDirectories] are tracked with relative path sensitivity, so entries stay valid across
+ * checkout locations, and a cache hit restores the whole [outputDirectory] instead of running the reconciliation above.
+ * Upgrading the plugin invalidates entries as well: the version stamped into the header comes from the task's own
+ * classpath, which Gradle folds into the cache key. With no source directory to scan the task is skipped as `NO-SOURCE`
+ * and its previous output is removed.
  */
 @CacheableTask
 abstract class GeneratePackageInfoTask : DefaultTask() {
@@ -99,12 +105,6 @@ abstract class GeneratePackageInfoTask : DefaultTask() {
     }
   }
 
-  /**
-   * Computes what [outputDirectory] should hold. Expects nothing when [generationEnabled] is `false`, which is what
-   * turns the task into a cleanup of its own previous output.
-   *
-   * @return package name mapped to the `package-info.java` content it should have
-   */
   private fun findAllExpectedPackageInfos(): Map<String, String> =
       if (generationEnabled.get()) {
         computeExpectedPackageInfos(

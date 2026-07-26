@@ -64,7 +64,7 @@ internal data class PackageRule(val included: Boolean, val identifier: String) {
 internal class PackageFilter(encodedRules: List<String>) {
 
   private val rules: List<Pair<PackagePattern, Boolean>> =
-      encodedRules.map { PackageRule.decode(it) }.map { PackagePattern.of(it.identifier) to !it.included }
+      encodedRules.map { PackageRule.decode(it) }.map { PackagePattern(it.identifier) to !it.included }
 
   /**
    * Checks [packageName] against the rules, letting the last matching one decide. Packages no rule matches are not

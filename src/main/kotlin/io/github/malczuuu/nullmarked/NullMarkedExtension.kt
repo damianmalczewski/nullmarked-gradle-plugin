@@ -24,7 +24,11 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.newInstance
 
-/** Configuration for the NullMarked plugin, available in build scripts as `nullmarked { ... }`. */
+/**
+ * Configuration for the NullMarked plugin, available in build scripts as `nullmarked { ... }`.
+ *
+ * @param objects factory creating the top-level `packages { ... }` block and the [sourceSets] container
+ */
 abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
 
   /**

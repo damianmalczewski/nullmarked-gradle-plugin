@@ -27,6 +27,14 @@ package io.github.malczuuu.nullmarked
 internal class PackagePattern private constructor(private val regex: Regex) {
 
   /**
+   * Compiles a package identifier into a pattern, rejecting malformed ones up front.
+   *
+   * @param identifier package identifier in ArchUnit syntax (see class docs)
+   * @throws InvalidInputException if [identifier] is not a valid package identifier
+   */
+  constructor(identifier: String) : this(compile(identifier))
+
+  /**
    * Tests a package name against this pattern.
    *
    * @param packageName dotted package name to test, e.g. `org.acme.util`
@@ -36,26 +44,13 @@ internal class PackagePattern private constructor(private val regex: Regex) {
 
   companion object {
 
-    /**
-     * Compiles a package identifier into a pattern, rejecting malformed ones up front.
-     *
-     * @param identifier package identifier in ArchUnit syntax (see class docs)
-     * @return a pattern matching package names described by [identifier]
-     * @throws InvalidInputException if [identifier] is not a valid package identifier
-     */
-    fun of(identifier: String): PackagePattern {
+    private fun compile(identifier: String): Regex {
       if (!PACKAGE_IDENTIFIER_REGEX.matches(identifier)) {
         throw InvalidInputException("Invalid package identifier '$identifier'.")
       }
-      return PackagePattern(Regex(toRegex(identifier)))
+      return Regex(toRegex(identifier))
     }
 
-    /**
-     * Translates a validated identifier into the regular expression matching the package names it describes.
-     *
-     * @param identifier package identifier in ArchUnit syntax (see class docs)
-     * @return regular expression source
-     */
     private fun toRegex(identifier: String): String {
       if (identifier == "..") {
         return """\w+(?:\.\w+)*"""
@@ -64,13 +59,6 @@ internal class PackagePattern private constructor(private val regex: Regex) {
       return parts.indices.joinToString("") { index -> partToRegex(parts, index) }
     }
 
-    /**
-     * Translates one `..`-separated part of an identifier, adding whatever the preceding separator implies.
-     *
-     * @param parts identifier split on `..`
-     * @param index part to translate
-     * @return regular expression source of that part
-     */
     private fun partToRegex(parts: List<String>, index: Int): String {
       val part = parts[index]
       if (part.isEmpty()) {

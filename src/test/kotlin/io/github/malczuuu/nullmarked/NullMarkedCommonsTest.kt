@@ -24,21 +24,21 @@ class NullMarkedCommonsTest {
 
   @Test
   fun `parses a bare version against the default jspecify coordinate`() {
-    val result = parseJspecifyCoordinate("1.0.0")
+    val result = parseJSpecifyCoordinate("1.0.0")
 
     assertThat(result).isEqualTo(JSpecifyCoordinate(JSPECIFY_GROUP, JSPECIFY_NAME, "1.0.0"))
   }
 
   @Test
   fun `parses a full group-name-version notation`() {
-    val result = parseJspecifyCoordinate("com.example:jspecify-fork:1.2.3")
+    val result = parseJSpecifyCoordinate("com.example:jspecify-fork:1.2.3")
 
     assertThat(result).isEqualTo(JSpecifyCoordinate("com.example", "jspecify-fork", "1.2.3"))
   }
 
   @Test
   fun `rejects notation with the wrong number of segments`() {
-    assertThatThrownBy { parseJspecifyCoordinate("org.jspecify:jspecify") }
+    assertThatThrownBy { parseJSpecifyCoordinate("org.jspecify:jspecify") }
         .isInstanceOf(InvalidInputException::class.java)
         .hasMessageContaining("org.jspecify:jspecify")
   }

@@ -46,7 +46,7 @@ class VerifyPackageInfoTaskTest {
         project.tasks
             .register<VerifyPackageInfoTask>("verifyPackageInfo") {
               sourceDirectories.from(sourceDir)
-              markerFile.set(this@VerifyPackageInfoTaskTest.markerFile)
+              buildCacheMarker.set(this@VerifyPackageInfoTaskTest.markerFile)
             }
             .get()
   }

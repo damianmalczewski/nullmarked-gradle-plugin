@@ -24,3 +24,5 @@ tasks.withType<JavaCompile>().configureEach {
         option("NullAway:JSpecifyMode", "true")
     }
 }
+
+defaultTasks("build")

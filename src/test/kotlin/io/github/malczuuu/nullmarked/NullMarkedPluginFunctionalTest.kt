@@ -270,7 +270,7 @@ class NullMarkedPluginFunctionalTest {
 
         // Mirrors a real multi-release-jar setup: main compiles at the project's default toolchain
         // (17 here), main21 pins its own compile task to JDK 21.
-        tasks.named<org.gradle.api.tasks.compile.JavaCompile>("compileMain21Java") {
+        tasks.named<org.gradle.api.tasks.compile.JavaCompile>("compileMain21Java").configure {
             javaCompiler = javaToolchains.compilerFor {
                 languageVersion = org.gradle.jvm.toolchain.JavaLanguageVersion.of(21)
             }

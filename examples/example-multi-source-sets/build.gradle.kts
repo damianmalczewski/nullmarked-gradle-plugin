@@ -1,6 +1,6 @@
 plugins {
-    java
     application
+    java
     id("io.github.malczuuu.nullmarked") version "0.4.0"
 }
 
@@ -22,13 +22,13 @@ sourceSets {
 
 // main21 overrides ExecutorFactory with a Java 21 (virtual-thread) implementation; pin its own compile task to a JDK 21
 // toolchain regardless of the project's default (17)
-tasks.named<JavaCompile>("compileMain21Java") {
+tasks.named<JavaCompile>("compileMain21Java").configure {
     javaCompiler = javaToolchains.compilerFor { languageVersion = JavaLanguageVersion.of(21) }
 }
 
 // Package main21's classes into META-INF/versions/21, so a JVM running on 21+ picks the virtual-thread ExecutorFactory
 // while everything below 21 keeps using the platform-thread one.
-tasks.named<Jar>("jar") {
+tasks.named<Jar>("jar").configure {
     val mainClassesDirs = sourceSets["main"].output.classesDirs
     into("META-INF/versions/21") {
         from(sourceSets["main21"].output) {
@@ -65,3 +65,5 @@ nullmarked {
     // package-info requirement, so it needs opting in too.
     sourceSet("main21")
 }
+
+defaultTasks("build")

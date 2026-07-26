@@ -24,7 +24,7 @@ class PackagePatternTest {
 
   @Test
   fun `plain identifier matches only the exact package`() {
-    val pattern = PackagePattern.of("org.acme")
+    val pattern = PackagePattern("org.acme")
 
     assertThat(pattern.matches("org.acme")).isTrue()
     assertThat(pattern.matches("org.acme.util")).isFalse()
@@ -34,7 +34,7 @@ class PackagePatternTest {
 
   @Test
   fun `trailing dot-dot matches the package and all subpackages`() {
-    val pattern = PackagePattern.of("org.acme..")
+    val pattern = PackagePattern("org.acme..")
 
     assertThat(pattern.matches("org.acme")).isTrue()
     assertThat(pattern.matches("org.acme.util")).isTrue()
@@ -45,7 +45,7 @@ class PackagePatternTest {
 
   @Test
   fun `leading dot-dot matches the package under any parent`() {
-    val pattern = PackagePattern.of("..internal")
+    val pattern = PackagePattern("..internal")
 
     assertThat(pattern.matches("internal")).isTrue()
     assertThat(pattern.matches("org.acme.internal")).isTrue()
@@ -54,7 +54,7 @@ class PackagePatternTest {
 
   @Test
   fun `middle dot-dot matches any packages in between`() {
-    val pattern = PackagePattern.of("org..util")
+    val pattern = PackagePattern("org..util")
 
     assertThat(pattern.matches("org.util")).isTrue()
     assertThat(pattern.matches("org.acme.util")).isTrue()
@@ -64,7 +64,7 @@ class PackagePatternTest {
 
   @Test
   fun `surrounding dot-dot matches any package containing the segment`() {
-    val pattern = PackagePattern.of("..internal..")
+    val pattern = PackagePattern("..internal..")
 
     assertThat(pattern.matches("internal")).isTrue()
     assertThat(pattern.matches("org.internal")).isTrue()
@@ -74,7 +74,7 @@ class PackagePatternTest {
 
   @Test
   fun `star matches within a single segment only`() {
-    val pattern = PackagePattern.of("org.*.util")
+    val pattern = PackagePattern("org.*.util")
 
     assertThat(pattern.matches("org.acme.util")).isTrue()
     assertThat(pattern.matches("org.acme.deep.util")).isFalse()
@@ -83,7 +83,7 @@ class PackagePatternTest {
 
   @Test
   fun `dot-dot alone matches every package`() {
-    val pattern = PackagePattern.of("..")
+    val pattern = PackagePattern("..")
 
     assertThat(pattern.matches("org")).isTrue()
     assertThat(pattern.matches("org.acme.util")).isTrue()
@@ -91,9 +91,9 @@ class PackagePatternTest {
 
   @Test
   fun `rejects invalid identifiers`() {
-    assertThatThrownBy { PackagePattern.of("org...acme") }.isInstanceOf(InvalidInputException::class.java)
-    assertThatThrownBy { PackagePattern.of(".org.acme") }.isInstanceOf(InvalidInputException::class.java)
-    assertThatThrownBy { PackagePattern.of("org.acme.") }.isInstanceOf(InvalidInputException::class.java)
-    assertThatThrownBy { PackagePattern.of("") }.isInstanceOf(InvalidInputException::class.java)
+    assertThatThrownBy { PackagePattern("org...acme") }.isInstanceOf(InvalidInputException::class.java)
+    assertThatThrownBy { PackagePattern(".org.acme") }.isInstanceOf(InvalidInputException::class.java)
+    assertThatThrownBy { PackagePattern("org.acme.") }.isInstanceOf(InvalidInputException::class.java)
+    assertThatThrownBy { PackagePattern("") }.isInstanceOf(InvalidInputException::class.java)
   }
 }

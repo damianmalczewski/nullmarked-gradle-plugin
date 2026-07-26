@@ -40,6 +40,11 @@ import org.gradle.api.tasks.VerificationException
  * What is verified never depends on whether generation is on: the task scans whatever [sourceDirectories] it is given,
  * so the same check covers both the generating and the `verifyOnly` setup. [verifyOnly] only shapes the failure
  * message.
+ *
+ * The task is cacheable, which is what [buildCacheMarker] exists for: a task declaring no output has nothing for Gradle
+ * to base up-to-date checks or cache entries on. A cache hit means these exact sources already passed verification
+ * elsewhere, so the check is skipped and the marker restored. Failures are never cached, so a build that fails
+ * verification keeps re-running the check until the missing `package-info.java` files appear.
  */
 @CacheableTask
 abstract class VerifyPackageInfoTask : DefaultTask() {
@@ -76,11 +81,11 @@ abstract class VerifyPackageInfoTask : DefaultTask() {
    * Marker file written on success. The task produces no real artifact; the marker only gives Gradle an output to base
    * up-to-date checks and caching on.
    */
-  @get:OutputFile abstract val markerFile: RegularFileProperty
+  @get:OutputFile abstract val buildCacheMarker: RegularFileProperty
 
   /**
-   * Fails with a [VerificationException] listing every package missing a `package-info.java`, or writes [markerFile]
-   * when there is nothing to report.
+   * Fails with a [VerificationException] listing every package missing a `package-info.java`, or writes
+   * [buildCacheMarker] when there is nothing to report.
    */
   @TaskAction
   fun verifyPackageInfos() {
@@ -88,15 +93,9 @@ abstract class VerifyPackageInfoTask : DefaultTask() {
     if (missingPackages.isNotEmpty()) {
       throw VerificationException(missingPackagesMessage(missingPackages))
     }
-    writeMarker()
+    writeBuildCacheMarker()
   }
 
-  /**
-   * Scans [sourceDirectories] for packages the rules cover but no `package-info.java` declares. Reports nothing when
-   * [verificationEnabled] is `false`.
-   *
-   * @return offending package names, sorted
-   */
   private fun findMissingPackages(): List<String> =
       if (verificationEnabled.get()) {
         findPackagesWithoutPackageInfo(sourceDirectories.files, packageSelectionRules.get()).sorted()
@@ -104,12 +103,6 @@ abstract class VerifyPackageInfoTask : DefaultTask() {
         emptyList()
       }
 
-  /**
-   * Builds the failure message listing [missingPackages], suggesting to turn [verifyOnly] off only when it is on.
-   *
-   * @param missingPackages packages without a `package-info.java`
-   * @return message of the thrown [VerificationException]
-   */
   private fun missingPackagesMessage(missingPackages: List<String>): String = buildString {
     append("Found ${missingPackages.size} package(s) without a package-info.java:\n")
     missingPackages.forEach { append("  - $it\n") }
@@ -120,9 +113,8 @@ abstract class VerifyPackageInfoTask : DefaultTask() {
     append(".")
   }
 
-  /** Writes [markerFile] with content that never varies, so reruns stay up-to-date. */
-  private fun writeMarker() {
-    val marker = markerFile.get().asFile
+  private fun writeBuildCacheMarker() {
+    val marker = buildCacheMarker.get().asFile
     marker.parentFile.mkdirs()
     marker.writeText("OK\n")
   }

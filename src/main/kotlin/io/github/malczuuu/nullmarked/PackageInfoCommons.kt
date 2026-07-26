@@ -33,7 +33,7 @@ internal fun computeExpectedPackageInfos(
     headerEnabled: Boolean,
     pluginVersion: String,
 ): Map<String, String> {
-  val header = generateHeader(headerEnabled, pluginVersion)
+  val header = preparePackageInfoHeader(headerEnabled, pluginVersion)
   return findPackagesWithoutPackageInfo(sourceDirectories, packageSelectionRules).associateWith { packageName ->
     header +
         """
@@ -59,7 +59,7 @@ internal fun findPackagesWithoutPackageInfo(
     sourceDirectories: Iterable<File>,
     packageSelectionRules: List<String>,
 ): Set<String> {
-  val packagesToGenerate = sortedSetOf<String>()
+  val results = sortedSetOf<String>()
   val packagesWithPackageInfo = sortedSetOf<String>()
 
   sourceDirectories
@@ -69,21 +69,21 @@ internal fun findPackagesWithoutPackageInfo(
             .walkTopDown()
             .filter { it.isFile && it.extension == "java" }
             .forEach { file ->
-              val packageName = packageNameOf(sourceDir, file)
+              val packageName = findPackageNameOf(sourceDir, file)
               if (file.name == "package-info.java") {
                 packagesWithPackageInfo += packageName
               } else if (packageName.isNotEmpty()) {
-                packagesToGenerate += packageName
+                results += packageName
               }
             }
       }
 
-  packagesToGenerate.removeAll(packagesWithPackageInfo)
+  results.removeAll(packagesWithPackageInfo)
 
   val filter = PackageFilter(packageSelectionRules)
-  packagesToGenerate.removeIf { packageName -> filter.isExcluded(packageName) }
+  results.removeIf { packageName -> filter.isExcluded(packageName) }
 
-  return packagesToGenerate
+  return results
 }
 
 /**
@@ -96,7 +96,7 @@ internal fun findExistingPackageInfos(outputDir: File): Map<String, File> {
   return outputDir
       .walkTopDown()
       .filter { it.isFile && it.name == "package-info.java" }
-      .associateBy { packageNameOf(outputDir, it) }
+      .associateBy { findPackageNameOf(outputDir, it) }
 }
 
 /**
@@ -136,18 +136,11 @@ internal fun ensurePackageInfoFile(
   if (existingFile == null) {
     writeNewPackageInfo(outputDir, packageName, content)
   } else if (existingFile.isPackageInfoDirty(content)) {
-    rewritePackageInfo(existingFile, content)
+    existingFile.rewritePackageInfo(content)
   }
 }
 
-/**
- * Renders the comment stamped on top of generated files.
- *
- * @param headerEnabled whether the header is rendered at all
- * @param pluginVersion plugin version named in the comment
- * @return header text, empty when [headerEnabled] is `false`
- */
-private fun generateHeader(headerEnabled: Boolean, pluginVersion: String): String =
+private fun preparePackageInfoHeader(headerEnabled: Boolean, pluginVersion: String): String =
     if (headerEnabled) {
       """
         //
@@ -159,14 +152,7 @@ private fun generateHeader(headerEnabled: Boolean, pluginVersion: String): Strin
       ""
     }
 
-/**
- * Derives the package a Java file belongs to from its location.
- *
- * @param sourceRoot source directory [javaFile] lives under
- * @param javaFile Java file to name the package of
- * @return package name, empty for files in the default package
- */
-private fun packageNameOf(sourceRoot: File, javaFile: File): String {
+private fun findPackageNameOf(sourceRoot: File, javaFile: File): String {
   val parent = javaFile.parentFile
   if (parent == null || parent == sourceRoot) {
     return ""
@@ -174,12 +160,6 @@ private fun packageNameOf(sourceRoot: File, javaFile: File): String {
   return parent.relativeTo(sourceRoot).path.replace(File.separatorChar, '.')
 }
 
-/**
- * Deletes a single generated file, along with the parent directories it leaves empty.
- *
- * @param file generated `package-info.java` to delete
- * @param outputDir generation output directory, kept even once empty
- */
 private fun prunePackage(file: File, outputDir: File) {
   file.delete()
   var dir = file.parentFile
@@ -190,31 +170,12 @@ private fun prunePackage(file: File, outputDir: File) {
   }
 }
 
-/**
- * Writes a `package-info.java` for a package that has none yet, creating its directories.
- *
- * @param outputDir directory the generated files are written to
- * @param packageName package the file belongs to
- * @param content content to write
- */
 private fun writeNewPackageInfo(outputDir: File, packageName: String, content: String) {
   val packageDir = outputDir.resolve(packageName.replace('.', '/'))
   packageDir.mkdirs()
   packageDir.resolve("package-info.java").writeText(content)
 }
 
-/**
- * Overwrites an outdated generated file.
- *
- * @param existingFile generated `package-info.java` to overwrite
- * @param content content it should have
- */
-private fun rewritePackageInfo(existingFile: File, content: String) = existingFile.writeText(content)
+private fun File.rewritePackageInfo(content: String) = writeText(content)
 
-/**
- * Compares a generated file with what it should contain.
- *
- * @param content content the file should have
- * @return whether the file needs rewriting
- */
 private fun File.isPackageInfoDirty(content: String): Boolean = readText() != content

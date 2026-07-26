@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -euo pipefail
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+cd example-kotlin-interop/ ; ./gradlew "$@" ; cd ../
+cd example-multi-source-sets/ ; ./gradlew "$@" ; cd ../
+cd example-nullmarked-nullaway/ ; ./gradlew "$@" ; cd ../

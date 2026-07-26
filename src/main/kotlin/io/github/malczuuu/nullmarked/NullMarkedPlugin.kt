@@ -66,24 +66,15 @@ open class NullMarkedPlugin : Plugin<Project> {
         javaSourceSets
             .matching { it.name == spec.name }
             .all {
-              val generateTask = configurePackageInfoGeneration(target, this, spec)
-              configurePackageInfoVerification(target, this, spec, generateTask)
-              configureDefaultDependency(target, this, extension.jspecifyVersion)
+              val packageInfoGenerationTask = configurePackageInfoGenerationTask(target, this, spec)
+              configurePackageInfoVerificationTask(target, this, spec, packageInfoGenerationTask)
+              configureDefaultJSpecifyDependency(target, this, extension.jspecifyVersion)
             }
       }
     }
   }
 
-  /**
-   * Registers the generation task for [javaSourceSet], registers its output as a source directory of that source set
-   * and keeps the generated files out of Javadoc.
-   *
-   * @param project project the plugin is applied to
-   * @param javaSourceSet Java source set to generate for
-   * @param spec configuration of that source set
-   * @return the registered generation task
-   */
-  private fun configurePackageInfoGeneration(
+  private fun configurePackageInfoGenerationTask(
       project: Project,
       javaSourceSet: SourceSet,
       spec: NullMarkedSourceSetSpec,
@@ -109,7 +100,7 @@ open class NullMarkedPlugin : Plugin<Project> {
           outputDirectory.set(outputDir)
         }
 
-    javaSourceSet.java.srcDir(generateTask.flatMap(GeneratePackageInfoTask::outputDirectory))
+    javaSourceSet.java.srcDir(generateTask.flatMap { it.outputDirectory })
 
     // Generated package-info.java only carries @NullMarked, not documentation; keep it out of Javadoc output.
     project.tasks.withType<Javadoc>().configureEach {
@@ -119,17 +110,7 @@ open class NullMarkedPlugin : Plugin<Project> {
     return generateTask
   }
 
-  /**
-   * Registers the verification task for [javaSourceSet] and makes its compilation depend on it. The task scans the
-   * whole source set, generated output included, so it verifies the end state in both the generating and the
-   * `verifyOnly` setup.
-   *
-   * @param project project the plugin is applied to
-   * @param javaSourceSet Java source set to verify
-   * @param spec configuration of that source set
-   * @param generateTask generation task whose output the verification has to see
-   */
-  private fun configurePackageInfoVerification(
+  private fun configurePackageInfoVerificationTask(
       project: Project,
       javaSourceSet: SourceSet,
       spec: NullMarkedSourceSetSpec,
@@ -149,34 +130,26 @@ open class NullMarkedPlugin : Plugin<Project> {
           verifyOnly.set(spec.verifyOnly)
           packageSelectionRules.set(spec.encodedPackageSelectionRules())
 
-          markerFile.set(project.layout.buildDirectory.file("tmp/nullmarked/$taskName/verification.txt"))
+          buildCacheMarker.set(project.layout.buildDirectory.file("tmp/nullmarked/$taskName/verification.txt"))
         }
 
     project.tasks.named(javaSourceSet.compileJavaTaskName).configure { dependsOn(verifyTask) }
   }
 
-  /**
-   * Adds JSpecify to the `compileOnly`-equivalent configuration of [javaSourceSet], unless the build script already
-   * declares it in one of the configurations returned by [candidateConfigurationNames].
-   *
-   * @param project project the plugin is applied to
-   * @param javaSourceSet Java source set to add the dependency to
-   * @param jspecifyVersion configured version or full dependency notation
-   */
-  private fun configureDefaultDependency(
+  private fun configureDefaultJSpecifyDependency(
       project: Project,
       javaSourceSet: SourceSet,
       jspecifyVersion: Provider<String>,
   ) {
     project.configurations.getByName(javaSourceSet.compileOnlyConfigurationName).withDependencies {
-      val coordinate = parseJspecifyCoordinate(jspecifyVersion.get())
-      if (jspecifyDeclaredIn(this, coordinate)) {
+      val coordinate = parseJSpecifyCoordinate(jspecifyVersion.get())
+      if (isJspecifyDeclaredIn(this, coordinate)) {
         return@withDependencies
       }
       val declaredElsewhere =
-          candidateConfigurationNames(javaSourceSet).any { name ->
+          findCandidateConfigurationNames(javaSourceSet).any { name ->
             val configuration = project.configurations.findByName(name)
-            configuration != null && jspecifyDeclaredIn(configuration.dependencies, coordinate)
+            configuration != null && isJspecifyDeclaredIn(configuration.dependencies, coordinate)
           }
       if (!declaredElsewhere) {
         add(project.dependencies.create("${coordinate.group}:${coordinate.name}:${coordinate.version}"))
@@ -184,15 +157,7 @@ open class NullMarkedPlugin : Plugin<Project> {
     }
   }
 
-  /**
-   * Configuration names checked for an existing JSpecify declaration before adding one. `main` also checks `api` and
-   * `compileOnlyApi`, which the `java-library` plugin only creates for `main`; other source sets have no such
-   * equivalent by convention, so only their own `compileOnly`/`implementation` configurations are checked.
-   *
-   * @param sourceSet Java source set the dependency would be added to
-   * @return names of the configurations to check
-   */
-  private fun candidateConfigurationNames(sourceSet: SourceSet): List<String> =
+  private fun findCandidateConfigurationNames(sourceSet: SourceSet): List<String> =
       if (sourceSet.name == SourceSet.MAIN_SOURCE_SET_NAME) {
         listOf(
             JavaPlugin.API_CONFIGURATION_NAME,
@@ -204,15 +169,7 @@ open class NullMarkedPlugin : Plugin<Project> {
         listOf(sourceSet.compileOnlyConfigurationName, sourceSet.implementationConfigurationName)
       }
 
-  /**
-   * Checks whether JSpecify is already declared, ignoring the version: a build script pinning another one still counts
-   * as declaring it.
-   *
-   * @param dependencies dependencies of a single configuration
-   * @param coordinate JSpecify coordinate the plugin would add
-   * @return whether a dependency with the same group and name is present
-   */
-  private fun jspecifyDeclaredIn(dependencies: Iterable<Dependency>, coordinate: JSpecifyCoordinate): Boolean =
+  private fun isJspecifyDeclaredIn(dependencies: Iterable<Dependency>, coordinate: JSpecifyCoordinate): Boolean =
       dependencies.any {
         it.group == coordinate.group && it.name == coordinate.name
       }
