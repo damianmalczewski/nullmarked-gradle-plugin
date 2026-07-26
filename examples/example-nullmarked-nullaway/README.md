@@ -72,7 +72,7 @@ cat build/generated/sources/nullmarked/java/main/com/example/orders/package-info
 plugins {
     java
     id("net.ltgt.errorprone") version "5.1.0"
-    id("io.github.malczuuu.nullmarked") version "0.4.0"
+    id("io.github.malczuuu.nullmarked") version "0.4.1"
 }
 
 dependencies {
