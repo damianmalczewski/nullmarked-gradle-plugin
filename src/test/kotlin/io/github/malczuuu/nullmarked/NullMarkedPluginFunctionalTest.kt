@@ -65,6 +65,26 @@ class NullMarkedPluginFunctionalTest {
   }
 
   @Test
+  fun `jspecify is added when the compile classpath is resolved from a task action`() {
+    project.appendToBuildScript(
+        """
+        tasks.register("resolveCompileClasspath") {
+            val compileClasspath = configurations["compileClasspath"].incoming.files
+            doLast {
+                compileClasspath.files.forEach { println("RESOLVED " + it.name) }
+            }
+        }
+        """
+    )
+
+    project.runner("resolveCompileClasspath", "--configuration-cache").build()
+    val secondRun = project.runner("resolveCompileClasspath", "--configuration-cache").build()
+
+    assertThat(secondRun.output).contains("Configuration cache entry reused")
+    assertThat(secondRun.output).contains("RESOLVED jspecify-1.0.0.jar")
+  }
+
+  @Test
   fun `user-declared jspecify version wins`() {
     project.appendToBuildScript(
         """

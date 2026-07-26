@@ -80,7 +80,7 @@ open class NullMarkedPlugin : Plugin<Project> {
       spec: NullMarkedSourceSetSpec,
   ): TaskProvider<GeneratePackageInfoTask> {
     val outputDir = project.layout.buildDirectory.dir("generated/sources/nullmarked/java/${javaSourceSet.name}")
-    val outputDirFile = outputDir.get().asFile
+    val outputDirPath = outputDir.map { it.asFile.toPath() }
 
     val generateTask =
         project.tasks.register<GeneratePackageInfoTask>(javaSourceSet.getTaskName("generate", "packageInfo")) {
@@ -88,7 +88,7 @@ open class NullMarkedPlugin : Plugin<Project> {
           description = "Generates @NullMarked package-info.java files for packages missing them."
 
           // Scan only the hand-written source directories, not our own output.
-          val inputDirFiles = project.provider { javaSourceSet.java.srcDirs - outputDirFile }
+          val inputDirFiles = project.provider { javaSourceSet.java.srcDirs - outputDir.get().asFile }
 
           sourceDirectories.from(inputDirFiles)
           // verifyOnly opts out of generated code; the source set is then expected to declare every package-info.java
@@ -104,7 +104,7 @@ open class NullMarkedPlugin : Plugin<Project> {
 
     // Generated package-info.java only carries @NullMarked, not documentation; keep it out of Javadoc output.
     project.tasks.withType<Javadoc>().configureEach {
-      exclude { it.file.toPath().startsWith(outputDirFile.toPath()) }
+      exclude { it.file.toPath().startsWith(outputDirPath.get()) }
     }
 
     return generateTask
@@ -141,18 +141,23 @@ open class NullMarkedPlugin : Plugin<Project> {
       javaSourceSet: SourceSet,
       jspecifyVersion: Provider<String>,
   ) {
-    project.configurations.getByName(javaSourceSet.compileOnlyConfigurationName).withDependencies {
-      val coordinate = parseJSpecifyCoordinate(jspecifyVersion.get())
-      if (isJspecifyDeclaredIn(this, coordinate)) {
-        return@withDependencies
-      }
-      val declaredElsewhere =
-          findCandidateConfigurationNames(javaSourceSet).any { name ->
-            val configuration = project.configurations.findByName(name)
-            configuration != null && isJspecifyDeclaredIn(configuration.dependencies, coordinate)
-          }
-      if (!declaredElsewhere) {
-        add(project.dependencies.create("${coordinate.group}:${coordinate.name}:${coordinate.version}"))
+    val configurations = project.configurations
+    val dependencies = project.dependencies
+
+    configurations.named(javaSourceSet.compileOnlyConfigurationName).configure {
+      withDependencies {
+        val coordinate = parseJSpecifyCoordinate(jspecifyVersion.get())
+        if (coordinate.isJSpecifyDeclaredIn(this)) {
+          return@withDependencies
+        }
+        val declaredElsewhere =
+            findCandidateConfigurationNames(javaSourceSet).any { name ->
+              val configuration = configurations.findByName(name)
+              configuration != null && coordinate.isJSpecifyDeclaredIn(configuration.dependencies)
+            }
+        if (!declaredElsewhere) {
+          add(dependencies.create("${coordinate.group}:${coordinate.name}:${coordinate.version}"))
+        }
       }
     }
   }
@@ -169,8 +174,7 @@ open class NullMarkedPlugin : Plugin<Project> {
         listOf(sourceSet.compileOnlyConfigurationName, sourceSet.implementationConfigurationName)
       }
 
-  private fun isJspecifyDeclaredIn(dependencies: Iterable<Dependency>, coordinate: JSpecifyCoordinate): Boolean =
-      dependencies.any {
-        it.group == coordinate.group && it.name == coordinate.name
-      }
+  private fun JSpecifyCoordinate.isJSpecifyDeclaredIn(dependencies: Iterable<Dependency>): Boolean = dependencies.any {
+    it.group == group && it.name == name
+  }
 }
