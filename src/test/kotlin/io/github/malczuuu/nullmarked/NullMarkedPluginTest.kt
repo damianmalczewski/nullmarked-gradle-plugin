@@ -16,9 +16,14 @@
 
 package io.github.malczuuu.nullmarked
 
+import io.github.malczuuu.nullmarked.dsl.NullMarkedExtension
+import io.github.malczuuu.nullmarked.internal.JSPECIFY_VERSION
+import io.github.malczuuu.nullmarked.tasks.GeneratePackageInfo
+import io.github.malczuuu.nullmarked.tasks.VerifyPackageInfo
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.SourceSet
@@ -73,7 +78,7 @@ class NullMarkedPluginTest {
 
     val task = project.tasks.getByName("generatePackageInfo")
 
-    assertThat(task).isInstanceOf(GeneratePackageInfoTask::class.java)
+    assertThat(task).isInstanceOf(GeneratePackageInfo::class.java)
   }
 
   @Test
@@ -91,7 +96,7 @@ class NullMarkedPluginTest {
 
     val task = project.tasks.getByName("verifyPackageInfo")
 
-    assertThat(task).isInstanceOf(VerifyPackageInfoTask::class.java)
+    assertThat(task).isInstanceOf(VerifyPackageInfo::class.java)
   }
 
   @Test
@@ -106,9 +111,8 @@ class NullMarkedPluginTest {
   fun `verification scans generated output next to hand-written sources`() {
     applyPlugins()
 
-    val verifyTask = project.tasks.getByName<VerifyPackageInfoTask>("verifyPackageInfo")
-    val generatedDir =
-        project.tasks.getByName<GeneratePackageInfoTask>("generatePackageInfo").outputDirectory.get().asFile
+    val verifyTask = project.tasks.getByName<VerifyPackageInfo>("verifyPackageInfo")
+    val generatedDir = project.tasks.getByName<GeneratePackageInfo>("generatePackageInfo").outputDirectory.get().asFile
 
     assertThat(verifyTask.sourceDirectories.files)
         .contains(File(project.projectDir, "src/main/java"))
@@ -119,8 +123,8 @@ class NullMarkedPluginTest {
   fun `generation and verification are both on by default`() {
     applyPlugins()
 
-    assertThat(project.tasks.getByName<GeneratePackageInfoTask>("generatePackageInfo").generationEnabled.get()).isTrue()
-    assertThat(project.tasks.getByName<VerifyPackageInfoTask>("verifyPackageInfo").verificationEnabled.get()).isTrue()
+    assertThat(project.tasks.getByName<GeneratePackageInfo>("generatePackageInfo").generationEnabled.get()).isTrue()
+    assertThat(project.tasks.getByName<VerifyPackageInfo>("verifyPackageInfo").verificationEnabled.get()).isTrue()
   }
 
   @Test
@@ -128,9 +132,8 @@ class NullMarkedPluginTest {
     applyPlugins()
     project.extensions.getByType<NullMarkedExtension>().verifyOnly.set(true)
 
-    assertThat(project.tasks.getByName<GeneratePackageInfoTask>("generatePackageInfo").generationEnabled.get())
-        .isFalse()
-    val verifyTask = project.tasks.getByName<VerifyPackageInfoTask>("verifyPackageInfo")
+    assertThat(project.tasks.getByName<GeneratePackageInfo>("generatePackageInfo").generationEnabled.get()).isFalse()
+    val verifyTask = project.tasks.getByName<VerifyPackageInfo>("verifyPackageInfo")
     assertThat(verifyTask.verificationEnabled.get()).isTrue()
     assertThat(verifyTask.verifyOnly.get()).isTrue()
   }
@@ -140,9 +143,8 @@ class NullMarkedPluginTest {
     applyPlugins()
     project.extensions.getByType<NullMarkedExtension>().enabled.set(false)
 
-    assertThat(project.tasks.getByName<GeneratePackageInfoTask>("generatePackageInfo").generationEnabled.get())
-        .isFalse()
-    assertThat(project.tasks.getByName<VerifyPackageInfoTask>("verifyPackageInfo").verificationEnabled.get()).isFalse()
+    assertThat(project.tasks.getByName<GeneratePackageInfo>("generatePackageInfo").generationEnabled.get()).isFalse()
+    assertThat(project.tasks.getByName<VerifyPackageInfo>("verifyPackageInfo").verificationEnabled.get()).isFalse()
   }
 
   @Test
@@ -150,8 +152,8 @@ class NullMarkedPluginTest {
     applyPlugins()
     project.extensions.getByType<NullMarkedExtension>().sourceSet("test") { verifyOnly.set(true) }
 
-    assertThat(project.tasks.getByName<GeneratePackageInfoTask>("generatePackageInfo").generationEnabled.get()).isTrue()
-    assertThat(project.tasks.getByName<GeneratePackageInfoTask>("generateTestPackageInfo").generationEnabled.get())
+    assertThat(project.tasks.getByName<GeneratePackageInfo>("generatePackageInfo").generationEnabled.get()).isTrue()
+    assertThat(project.tasks.getByName<GeneratePackageInfo>("generateTestPackageInfo").generationEnabled.get())
         .isFalse()
   }
 
@@ -170,7 +172,7 @@ class NullMarkedPluginTest {
   fun `task scans only hand-written source directories`() {
     applyPlugins()
 
-    val task = project.tasks.getByName<GeneratePackageInfoTask>("generatePackageInfo")
+    val task = project.tasks.getByName<GeneratePackageInfo>("generatePackageInfo")
     val generatedDir = task.outputDirectory.get().asFile
 
     assertThat(task.sourceDirectories.files)
@@ -182,7 +184,7 @@ class NullMarkedPluginTest {
   fun `excludes generated package-info from javadoc`() {
     applyPlugins()
 
-    val task = project.tasks.getByName<GeneratePackageInfoTask>("generatePackageInfo")
+    val task = project.tasks.getByName<GeneratePackageInfo>("generatePackageInfo")
     val generatedDir = task.outputDirectory.get().asFile
     val generatedPackageInfo =
         File(generatedDir, "com/acme/package-info.java").apply {
@@ -228,7 +230,7 @@ class NullMarkedPluginTest {
     applyPlugins()
     project.extensions.getByType<NullMarkedExtension>().jspecifyVersion.set("org.jspecify:jspecify")
 
-    assertThatThrownBy { compileOnlyDependencies() }.isInstanceOf(InvalidInputException::class.java)
+    assertThatThrownBy { compileOnlyDependencies() }.isInstanceOf(InvalidUserDataException::class.java)
   }
 
   @Test
@@ -277,8 +279,8 @@ class NullMarkedPluginTest {
     applyPlugins()
     project.extensions.getByType<NullMarkedExtension>().sourceSet("test") {}
 
-    assertThat(project.tasks.getByName("generateTestPackageInfo")).isInstanceOf(GeneratePackageInfoTask::class.java)
-    assertThat(project.tasks.getByName("verifyTestPackageInfo")).isInstanceOf(VerifyPackageInfoTask::class.java)
+    assertThat(project.tasks.getByName("generateTestPackageInfo")).isInstanceOf(GeneratePackageInfo::class.java)
+    assertThat(project.tasks.getByName("verifyTestPackageInfo")).isInstanceOf(VerifyPackageInfo::class.java)
     assertThat(taskDependencyNames("compileTestJava")).contains("verifyTestPackageInfo")
   }
 

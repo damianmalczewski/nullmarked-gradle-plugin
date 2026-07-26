@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.nullmarked
+package io.github.malczuuu.nullmarked.internal
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.gradle.api.InvalidUserDataException
 import org.junit.jupiter.api.Test
 
 class PackagePatternTest {
@@ -91,9 +92,9 @@ class PackagePatternTest {
 
   @Test
   fun `rejects invalid identifiers`() {
-    assertThatThrownBy { PackagePattern("org...acme") }.isInstanceOf(InvalidInputException::class.java)
-    assertThatThrownBy { PackagePattern(".org.acme") }.isInstanceOf(InvalidInputException::class.java)
-    assertThatThrownBy { PackagePattern("org.acme.") }.isInstanceOf(InvalidInputException::class.java)
-    assertThatThrownBy { PackagePattern("") }.isInstanceOf(InvalidInputException::class.java)
+    assertThatThrownBy { PackagePattern("org...acme") }.isInstanceOf(InvalidUserDataException::class.java)
+    assertThatThrownBy { PackagePattern(".org.acme") }.isInstanceOf(InvalidUserDataException::class.java)
+    assertThatThrownBy { PackagePattern("org.acme.") }.isInstanceOf(InvalidUserDataException::class.java)
+    assertThatThrownBy { PackagePattern("") }.isInstanceOf(InvalidUserDataException::class.java)
   }
 }

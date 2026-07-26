@@ -14,8 +14,16 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.nullmarked
+package io.github.malczuuu.nullmarked.tasks
 
+import io.github.malczuuu.nullmarked.dsl.NullMarkedPackagesSpec
+import io.github.malczuuu.nullmarked.internal.PLUGIN_VERSION
+import io.github.malczuuu.nullmarked.internal.PackagePattern
+import io.github.malczuuu.nullmarked.internal.PackageRule
+import io.github.malczuuu.nullmarked.internal.computeExpectedPackageInfos
+import io.github.malczuuu.nullmarked.internal.ensurePackageInfoFile
+import io.github.malczuuu.nullmarked.internal.findExistingPackageInfos
+import io.github.malczuuu.nullmarked.internal.prunePackages
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -47,7 +55,7 @@ import org.gradle.api.tasks.TaskAction
  * and its previous output is removed.
  */
 @CacheableTask
-abstract class GeneratePackageInfoTask : DefaultTask() {
+abstract class GeneratePackageInfo : DefaultTask() {
 
   init {
     generationEnabled.convention(true)

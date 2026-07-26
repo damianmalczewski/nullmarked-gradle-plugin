@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.nullmarked
+package io.github.malczuuu.nullmarked.tasks
 
+import io.github.malczuuu.nullmarked.fixtures.TestProject
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
@@ -27,14 +28,14 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
-class VerifyPackageInfoTaskTest {
+class VerifyPackageInfoTest {
 
   @TempDir lateinit var projectDir: File
 
   private lateinit var testProject: TestProject
   private lateinit var sourceDir: File
   private lateinit var markerFile: File
-  private lateinit var task: VerifyPackageInfoTask
+  private lateinit var task: VerifyPackageInfo
 
   @BeforeEach
   fun beforeEach() {
@@ -44,9 +45,9 @@ class VerifyPackageInfoTaskTest {
     markerFile = testProject.file("build/tmp/nullmarked/verifyPackageInfo/verification.txt")
     task =
         project.tasks
-            .register<VerifyPackageInfoTask>("verifyPackageInfo") {
+            .register<VerifyPackageInfo>("verifyPackageInfo") {
               sourceDirectories.from(sourceDir)
-              buildCacheMarker.set(this@VerifyPackageInfoTaskTest.markerFile)
+              buildCacheMarker.set(this@VerifyPackageInfoTest.markerFile)
             }
             .get()
   }

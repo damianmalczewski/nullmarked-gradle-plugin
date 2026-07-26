@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.nullmarked
+package io.github.malczuuu.nullmarked.internal
+
+import org.gradle.api.InvalidUserDataException
 
 /**
  * Matches package names against a package identifier following ArchUnit's syntax:
@@ -30,7 +32,7 @@ internal class PackagePattern private constructor(private val regex: Regex) {
    * Compiles a package identifier into a pattern, rejecting malformed ones up front.
    *
    * @param identifier package identifier in ArchUnit syntax (see class docs)
-   * @throws InvalidInputException if [identifier] is not a valid package identifier
+   * @throws InvalidUserDataException if [identifier] is not a valid package identifier
    */
   constructor(identifier: String) : this(compile(identifier))
 
@@ -44,10 +46,21 @@ internal class PackagePattern private constructor(private val regex: Regex) {
 
   companion object {
 
-    private fun compile(identifier: String): Regex {
+    /**
+     * Rejects a malformed package identifier without compiling it, letting the `nullmarked { packages { ... } }` block
+     * fail at the `include`/`exclude` call site instead of at task execution.
+     *
+     * @param identifier package identifier in ArchUnit syntax (see class docs)
+     * @throws InvalidUserDataException if [identifier] is not a valid package identifier
+     */
+    fun validate(identifier: String) {
       if (!PACKAGE_IDENTIFIER_REGEX.matches(identifier)) {
-        throw InvalidInputException("Invalid package identifier '$identifier'.")
+        throw InvalidUserDataException("Invalid package identifier '$identifier'.")
       }
+    }
+
+    private fun compile(identifier: String): Regex {
+      validate(identifier)
       return Regex(toRegex(identifier))
     }
 
@@ -70,7 +83,7 @@ internal class PackagePattern private constructor(private val regex: Regex) {
           } else {
             ""
           }
-      return separator + part.split('.').joinToString("""\.""") { segment -> segment.replace("*", """\w+""") }
+      return separator + part.split(".").joinToString("""\.""") { segment -> segment.replace("*", """\w+""") }
     }
   }
 }

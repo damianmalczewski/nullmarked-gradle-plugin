@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.nullmarked
+package io.github.malczuuu.nullmarked.internal
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.gradle.api.InvalidUserDataException
 import org.junit.jupiter.api.Test
 
 class PackageFilterTest {
@@ -67,23 +68,7 @@ class PackageFilterTest {
   }
 
   @Test
-  fun `rules round-trip through their encoded form`() {
-    val excluded = PackageRule(included = false, identifier = "com.acme..")
-    val included = PackageRule(included = true, identifier = "com.acme.api")
-
-    assertThat(excluded.encode()).isEqualTo("-com.acme..")
-    assertThat(included.encode()).isEqualTo("+com.acme.api")
-    assertThat(PackageRule.decode(excluded.encode())).isEqualTo(excluded)
-    assertThat(PackageRule.decode(included.encode())).isEqualTo(included)
-  }
-
-  @Test
-  fun `rejects an unprefixed rule`() {
-    assertThatThrownBy { PackageRule.decode("com.acme") }.isInstanceOf(InvalidInputException::class.java)
-  }
-
-  @Test
   fun `rejects an invalid package identifier`() {
-    assertThatThrownBy { PackageFilter(listOf("-com acme")) }.isInstanceOf(InvalidInputException::class.java)
+    assertThatThrownBy { PackageFilter(listOf("-com acme")) }.isInstanceOf(InvalidUserDataException::class.java)
   }
 }

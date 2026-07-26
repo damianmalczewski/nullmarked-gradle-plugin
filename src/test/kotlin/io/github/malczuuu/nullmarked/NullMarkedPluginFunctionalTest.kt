@@ -16,6 +16,7 @@
 
 package io.github.malczuuu.nullmarked
 
+import io.github.malczuuu.nullmarked.fixtures.TestProject
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.TaskOutcome
@@ -107,6 +108,11 @@ class NullMarkedPluginFunctionalTest {
         nullmarked {
             enabled = false
         }
+
+        // A disabled plugin adds no jspecify dependency, so the sample sources bring their own.
+        dependencies {
+            compileOnly("org.jspecify:jspecify:1.0.0")
+        }
         """
     )
 
@@ -115,6 +121,36 @@ class NullMarkedPluginFunctionalTest {
     assertThat(result.task(":generatePackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(project.generatedPackageInfo("com.acme")).doesNotExist()
     assertThat(result.task(":compileJava")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+  }
+
+  @Test
+  fun `disabling the plugin skips the jspecify dependency`() {
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            enabled = false
+        }
+        """
+    )
+
+    val result = project.runner("dependencies", "--configuration", "compileClasspath").build()
+
+    assertThat(result.output).doesNotContain("org.jspecify:jspecify")
+  }
+
+  @Test
+  fun `verifyOnly still adds the jspecify dependency`() {
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            verifyOnly = true
+        }
+        """
+    )
+
+    val result = project.runner("dependencies", "--configuration", "compileClasspath").build()
+
+    assertThat(result.output).contains("org.jspecify:jspecify:1.0.0")
   }
 
   @Test
@@ -416,6 +452,11 @@ class NullMarkedPluginFunctionalTest {
             enabled = false
             verifyOnly = true
         }
+
+        // A disabled plugin adds no jspecify dependency, so the sample sources bring their own.
+        dependencies {
+            compileOnly("org.jspecify:jspecify:1.0.0")
+        }
         """
     )
 
@@ -467,5 +508,107 @@ class NullMarkedPluginFunctionalTest {
 
     assertThat(result.task(":generatePackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(project.generatedPackageInfo("com.acme")).doesNotExist()
+  }
+
+  @Test
+  fun `fails on a source set no java source set matches`() {
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            sourceSet("itnegrationTest") {
+                verifyOnly = true
+            }
+        }
+        """
+    )
+
+    val result = project.runner("generatePackageInfo").buildAndFail()
+
+    assertThat(result.output).contains("nullmarked: no source set named 'itnegrationTest'")
+    assertThat(result.output).contains("Available: main, test.")
+  }
+
+  @Test
+  fun `fails listing every source set no java source set matches`() {
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            sourceSet("nope")
+            sourceSet("alsoNope")
+        }
+        """
+    )
+
+    val result = project.runner("generatePackageInfo").buildAndFail()
+
+    assertThat(result.output).contains("nullmarked: no source sets named 'alsoNope', 'nope'")
+  }
+
+  @Test
+  fun `accepts a source set registered after the nullmarked block`() {
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            sourceSet("extra")
+        }
+
+        sourceSets {
+            create("extra")
+        }
+        """
+    )
+
+    val result = project.runner("generateExtraPackageInfo").build()
+
+    assertThat(result.task(":generateExtraPackageInfo")?.outcome).isEqualTo(TaskOutcome.NO_SOURCE)
+  }
+
+  @Test
+  fun `rejects an invalid package identifier at configuration time`() {
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            packages {
+                exclude("com.acme!!")
+            }
+        }
+        """
+    )
+
+    val result = project.runner("tasks").buildAndFail()
+
+    assertThat(result.output).contains("Invalid package identifier 'com.acme!!'")
+  }
+
+  @Test
+  fun `compileJava runs generation and verification`() {
+    val result = project.runner("compileJava").build()
+
+    assertThat(result.task(":generatePackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(result.task(":verifyPackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+  }
+
+  @Test
+  fun `generation task sits in the build group`() {
+    val result = project.runner("tasks", "--group", "generation").build()
+
+    assertThat(result.output).contains("generatePackageInfo")
+  }
+
+  @Test
+  fun `does nothing when applied without the java plugin`() {
+    project.write("settings.gradle.kts", "rootProject.name = \"under-test\"")
+    project.write(
+        "build.gradle.kts",
+        """
+        plugins {
+            id("io.github.malczuuu.nullmarked")
+        }
+        """,
+    )
+
+    val result = project.runner("tasks").build()
+
+    assertThat(result.output).doesNotContain("generatePackageInfo")
   }
 }

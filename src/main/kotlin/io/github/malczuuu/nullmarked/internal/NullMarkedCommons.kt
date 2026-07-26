@@ -14,17 +14,10 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.nullmarked
+package io.github.malczuuu.nullmarked.internal
 
 import java.util.Properties
 import org.gradle.api.InvalidUserDataException
-
-/**
- * Thrown when a user-supplied `nullmarked` parameter is malformed.
- *
- * @param message description of what was invalid and why
- */
-internal class InvalidInputException(message: String) : InvalidUserDataException(message)
 
 /** Group of the default `org.jspecify:jspecify` dependency coordinate. */
 internal const val JSPECIFY_GROUP = "org.jspecify"
@@ -34,6 +27,9 @@ internal const val JSPECIFY_NAME = "jspecify"
 
 /** Default value of `nullmarked.jspecifyVersion` used when the build script does not configure one. */
 internal const val JSPECIFY_VERSION = "1.0.0"
+
+/** Oldest Gradle release the plugin supports, enforced when it is applied. */
+internal const val MINIMUM_GRADLE_VERSION = "8.3"
 
 /** ArchUnit-style package identifier syntax accepted by [PackagePattern]. */
 internal val PACKAGE_IDENTIFIER_REGEX = Regex(PACKAGE_IDENTIFIER_PATTERN)
@@ -59,7 +55,7 @@ internal data class JSpecifyCoordinate(val group: String, val name: String, val 
  *
  * @param value `nullmarked.jspecifyVersion` value to parse
  * @return the resolved coordinate
- * @throws InvalidInputException if [value] is neither a bare version nor a full `group:name:version` notation
+ * @throws InvalidUserDataException if [value] is neither a bare version nor a full `group:name:version` notation
  */
 internal fun parseJSpecifyCoordinate(value: String): JSpecifyCoordinate {
   val parts = value.split(":")
@@ -67,7 +63,7 @@ internal fun parseJSpecifyCoordinate(value: String): JSpecifyCoordinate {
     1 -> JSpecifyCoordinate(JSPECIFY_GROUP, JSPECIFY_NAME, parts[0])
     3 -> JSpecifyCoordinate(parts[0], parts[1], parts[2])
     else ->
-        throw InvalidInputException(
+        throw InvalidUserDataException(
             "nullmarked.jspecifyVersion must be either a version (e.g. \"1.0.0\") or a full dependency notation " +
                 "(e.g. \"org.jspecify:jspecify:1.0.0\"), but was: \"$value\"."
         )

@@ -116,7 +116,7 @@ val generatePluginProperties = tasks.register("generatePluginProperties") {
     outputs.dir(outputDir)
 
     doLast {
-        outputDir.get().file("io/github/malczuuu/nullmarked/nullmarked.properties").asFile.apply {
+        outputDir.get().file("io/github/malczuuu/nullmarked/internal/nullmarked.properties").asFile.apply {
             parentFile.mkdirs()
             writeText("version=$pluginVersion\n")
         }

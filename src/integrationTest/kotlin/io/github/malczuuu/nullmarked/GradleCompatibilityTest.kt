@@ -16,6 +16,7 @@
 
 package io.github.malczuuu.nullmarked
 
+import io.github.malczuuu.nullmarked.fixtures.TestProject
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.TaskOutcome

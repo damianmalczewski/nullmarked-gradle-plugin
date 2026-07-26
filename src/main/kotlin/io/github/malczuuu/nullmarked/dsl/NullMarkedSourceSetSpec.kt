@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.nullmarked
+package io.github.malczuuu.nullmarked.dsl
 
+import io.github.malczuuu.nullmarked.internal.PackageRule
 import javax.inject.Inject
 import org.gradle.api.Action
 import org.gradle.api.Named
@@ -33,7 +34,10 @@ import org.gradle.kotlin.dsl.newInstance
  */
 abstract class NullMarkedSourceSetSpec @Inject constructor(private val name: String, objects: ObjectFactory) : Named {
 
-  /** Whether `package-info.java` files are generated for this source set. Defaults to `nullmarked.enabled`. */
+  /**
+   * Whether the plugin does anything for this source set, see [NullMarkedExtension.enabled]. With `false` it is inert
+   * here: no generation, no verification and no JSpecify dependency. Defaults to `nullmarked.enabled`.
+   */
   abstract val enabled: Property<Boolean>
 
   /**

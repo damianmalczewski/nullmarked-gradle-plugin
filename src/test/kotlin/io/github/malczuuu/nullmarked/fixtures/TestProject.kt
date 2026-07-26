@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.nullmarked
+package io.github.malczuuu.nullmarked.fixtures
 
 import java.io.File
 import org.gradle.testkit.runner.GradleRunner
@@ -44,6 +44,32 @@ class TestProject(val dir: File) {
     file("build.gradle.kts").appendText("\n" + content.trimIndent() + "\n")
   }
 
+  fun appendToGroovyBuildScript(content: String) {
+    file("build.gradle").appendText("\n" + content.trimIndent() + "\n")
+  }
+
+  /**
+   * Writes a Groovy `settings.gradle` and `build.gradle` applying `java` and the plugin under test, so the DSL can be
+   * exercised through Groovy's dynamic dispatch rather than only through the statically bound Kotlin DSL.
+   */
+  fun writeStandardGroovyBuild(rootProjectName: String = "under-test") {
+    write("settings.gradle", "rootProject.name = '$rootProjectName'")
+    write(
+        "build.gradle",
+        """
+        plugins {
+            id 'java'
+            id 'io.github.malczuuu.nullmarked'
+        }
+
+        repositories {
+            mavenCentral()
+        }
+        """,
+    )
+    writeTestKitGradleProperties()
+  }
+
   /** Writes `settings.gradle.kts` and a `build.gradle.kts` applying `java` and the plugin under test. */
   fun writeStandardBuild(rootProjectName: String = "under-test") {
     write("settings.gradle.kts", "rootProject.name = \"$rootProjectName\"")
@@ -60,8 +86,12 @@ class TestProject(val dir: File) {
         }
         """,
     )
-    // Keep TestKit daemons small and short-lived; the compatibility matrix spawns one daemon per
-    // Gradle version and accumulating full-size idle daemons destabilizes the test run.
+    writeTestKitGradleProperties()
+  }
+
+  // Keep TestKit daemons small and short-lived; the compatibility matrix spawns one daemon per
+  // Gradle version and accumulating full-size idle daemons destabilizes the test run.
+  private fun writeTestKitGradleProperties() {
     write(
         "gradle.properties",
         """

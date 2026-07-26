@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.nullmarked
+package io.github.malczuuu.nullmarked.dsl
 
+import io.github.malczuuu.nullmarked.internal.PackageRule
 import javax.inject.Inject
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
@@ -32,8 +33,10 @@ import org.gradle.kotlin.dsl.newInstance
 abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
 
   /**
-   * Whether `package-info.java` files annotated with `@NullMarked` should be generated for non-empty packages that do
-   * not declare one. Defaults to `true`.
+   * Whether the plugin does anything at all. With `true`, `package-info.java` files annotated with `@NullMarked` are
+   * generated for non-empty packages that do not declare one. With `false` the plugin is inert: nothing is generated,
+   * nothing is verified and no JSpecify dependency is added, which is also the only way to opt out of that dependency
+   * short of declaring one yourself. Defaults to `true`.
    */
   abstract val enabled: Property<Boolean>
 
@@ -65,7 +68,7 @@ abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
    * and [NullMarkedSourceSetSpec.verifyOnly] default to this extension's own values of the same name, and its `packages
    * { ... }` rules are evaluated after the top-level ones.
    */
-  val sourceSets: NamedDomainObjectContainer<NullMarkedSourceSetSpec> =
+  internal val sourceSets: NamedDomainObjectContainer<NullMarkedSourceSetSpec> =
       objects.domainObjectContainer(NullMarkedSourceSetSpec::class.java) { name ->
         objects.newInstance<NullMarkedSourceSetSpec>(name)
       }

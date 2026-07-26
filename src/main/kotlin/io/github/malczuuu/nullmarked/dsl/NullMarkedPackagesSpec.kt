@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.nullmarked
+package io.github.malczuuu.nullmarked.dsl
 
+import io.github.malczuuu.nullmarked.internal.PackagePattern
+import io.github.malczuuu.nullmarked.internal.PackageRule
 import javax.inject.Inject
+import org.gradle.api.InvalidUserDataException
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.kotlin.dsl.listProperty
@@ -54,6 +57,7 @@ abstract class NullMarkedPackagesSpec @Inject constructor(objects: ObjectFactory
    * Skips the packages matching [packages], unless a later rule includes them again.
    *
    * @param packages package identifiers (ArchUnit syntax, see [PackagePattern])
+   * @throws InvalidUserDataException if any of [packages] is not a valid package identifier
    */
   fun exclude(vararg packages: String) {
     addRules(included = false, packages = packages)
@@ -64,12 +68,16 @@ abstract class NullMarkedPackagesSpec @Inject constructor(objects: ObjectFactory
    * exceptions out of an earlier [exclude], as packages are processed by default.
    *
    * @param packages package identifiers (ArchUnit syntax, see [PackagePattern])
+   * @throws InvalidUserDataException if any of [packages] is not a valid package identifier
    */
   fun include(vararg packages: String) {
     addRules(included = true, packages = packages)
   }
 
+  // Validating here rather than only where the rules are applied points the failure at the build script line that
+  // declared the identifier; the tasks still validate what reaches them through their own inputs.
   private fun addRules(included: Boolean, packages: Array<out String>) {
+    packages.forEach { PackagePattern.validate(it) }
     rules.addAll(packages.map { PackageRule(included = included, identifier = it) })
   }
 }

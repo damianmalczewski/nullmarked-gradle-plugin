@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.nullmarked
+package io.github.malczuuu.nullmarked.internal
 
+import io.github.malczuuu.nullmarked.fixtures.TestProject
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach

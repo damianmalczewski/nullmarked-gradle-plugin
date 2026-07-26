@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.nullmarked
+package io.github.malczuuu.nullmarked.internal
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.gradle.api.InvalidUserDataException
 import org.junit.jupiter.api.Test
 
 class NullMarkedCommonsTest {
@@ -39,7 +40,7 @@ class NullMarkedCommonsTest {
   @Test
   fun `rejects notation with the wrong number of segments`() {
     assertThatThrownBy { parseJSpecifyCoordinate("org.jspecify:jspecify") }
-        .isInstanceOf(InvalidInputException::class.java)
+        .isInstanceOf(InvalidUserDataException::class.java)
         .hasMessageContaining("org.jspecify:jspecify")
   }
 }

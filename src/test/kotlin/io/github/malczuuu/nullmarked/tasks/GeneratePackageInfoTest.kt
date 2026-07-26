@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.nullmarked
+package io.github.malczuuu.nullmarked.tasks
 
+import io.github.malczuuu.nullmarked.fixtures.TestProject
+import io.github.malczuuu.nullmarked.internal.PLUGIN_VERSION
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.kotlin.dsl.register
@@ -24,14 +26,14 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
-class GeneratePackageInfoTaskTest {
+class GeneratePackageInfoTest {
 
   @TempDir lateinit var projectDir: File
 
   private lateinit var testProject: TestProject
   private lateinit var sourceDir: File
   private lateinit var outputDir: File
-  private lateinit var task: GeneratePackageInfoTask
+  private lateinit var task: GeneratePackageInfo
 
   @BeforeEach
   fun beforeEach() {
@@ -41,7 +43,7 @@ class GeneratePackageInfoTaskTest {
     outputDir = testProject.file("build/generated-package-info")
     task =
         project.tasks
-            .register<GeneratePackageInfoTask>("generatePackageInfo") {
+            .register<GeneratePackageInfo>("generatePackageInfo") {
               sourceDirectories.from(sourceDir)
               outputDirectory.set(outputDir)
             }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.malczuuu.nullmarked
+package io.github.malczuuu.nullmarked.dsl
 
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.api.Project

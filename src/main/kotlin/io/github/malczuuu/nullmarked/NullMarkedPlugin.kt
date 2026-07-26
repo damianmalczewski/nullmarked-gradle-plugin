@@ -16,6 +16,16 @@
 
 package io.github.malczuuu.nullmarked
 
+import io.github.malczuuu.nullmarked.dsl.NullMarkedExtension
+import io.github.malczuuu.nullmarked.dsl.NullMarkedSourceSetSpec
+import io.github.malczuuu.nullmarked.internal.JSPECIFY_VERSION
+import io.github.malczuuu.nullmarked.internal.JSpecifyCoordinate
+import io.github.malczuuu.nullmarked.internal.MINIMUM_GRADLE_VERSION
+import io.github.malczuuu.nullmarked.internal.parseJSpecifyCoordinate
+import io.github.malczuuu.nullmarked.tasks.GeneratePackageInfo
+import io.github.malczuuu.nullmarked.tasks.VerifyPackageInfo
+import org.gradle.api.GradleException
+import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Dependency
@@ -23,6 +33,7 @@ import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.javadoc.Javadoc
 import org.gradle.kotlin.dsl.create
@@ -30,6 +41,7 @@ import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
 import org.gradle.language.base.plugins.LifecycleBasePlugin
+import org.gradle.util.GradleVersion
 
 /**
  * Applies JSpecify's `NullMarked` convention to a Java project:
@@ -41,7 +53,10 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin
  *   build script declares a JSpecify dependency itself.
  *
  * With `verifyOnly`, generation is skipped and verification fails on packages without a hand-written
- * `package-info.java`; with `enabled = false`, both generation and verification are off.
+ * `package-info.java`; with `enabled = false`, the plugin is inert for that source set - no generation, no
+ * verification, and no dependency added.
+ *
+ * Requires Gradle [MINIMUM_GRADLE_VERSION] or later. Applying it to a project without the `java` plugin does nothing.
  */
 open class NullMarkedPlugin : Plugin<Project> {
 
@@ -51,6 +66,8 @@ open class NullMarkedPlugin : Plugin<Project> {
    * @param target The target object
    */
   override fun apply(target: Project) {
+    checkGradleVersion()
+
     val extension = target.extensions.create<NullMarkedExtension>("nullmarked")
     extension.enabled.convention(true)
     extension.headerEnabled.convention(true)
@@ -68,22 +85,61 @@ open class NullMarkedPlugin : Plugin<Project> {
             .all {
               val packageInfoGenerationTask = configurePackageInfoGenerationTask(target, this, spec)
               configurePackageInfoVerificationTask(target, this, spec, packageInfoGenerationTask)
-              configureDefaultJSpecifyDependency(target, this, extension.jspecifyVersion)
+              configureDefaultJSpecifyDependency(target, this, spec, extension.jspecifyVersion)
             }
       }
     }
+
+    // Without the java plugin the blocks above never run and the project has no source sets to check against, so
+    // applying nullmarked to a java-less project stays a silent no-op and blanket `subprojects { apply(...) }` keeps
+    // working.
+    target.afterEvaluate {
+      if (plugins.hasPlugin(JavaPlugin::class.java)) {
+        checkOptedInSourceSetsExist(extension, extensions.getByType<JavaPluginExtension>().sourceSets)
+      }
+    }
   }
+
+  private fun checkGradleVersion() {
+    if (GradleVersion.current() < GradleVersion.version(MINIMUM_GRADLE_VERSION)) {
+      throw GradleException(
+          "The io.github.malczuuu.nullmarked plugin requires Gradle $MINIMUM_GRADLE_VERSION or later, but was applied " +
+              "to Gradle ${GradleVersion.current().version}."
+      )
+    }
+  }
+
+  /**
+   * Fails on source sets opted into via `nullmarked { sourceSet("...") }` that no Java `SourceSet` matches, which would
+   * otherwise register no task and silently ignore the whole configuration block.
+   */
+  private fun checkOptedInSourceSetsExist(extension: NullMarkedExtension, javaSourceSets: SourceSetContainer) {
+    val availableNames = javaSourceSets.names
+    val unknownNames = extension.sourceSets.names.filterNot { it in availableNames }
+    if (unknownNames.isEmpty()) {
+      return
+    }
+    val subject =
+        if (unknownNames.size == 1) {
+          "no source set named ${unknownNames.single().quoted()}"
+        } else {
+          "no source sets named ${unknownNames.joinToString(", ") { it.quoted() }}"
+        }
+    throw InvalidUserDataException("nullmarked: $subject. Available: ${availableNames.joinToString(", ")}.")
+  }
+
+  private fun String.quoted(): String = "'$this'"
 
   private fun configurePackageInfoGenerationTask(
       project: Project,
       javaSourceSet: SourceSet,
       spec: NullMarkedSourceSetSpec,
-  ): TaskProvider<GeneratePackageInfoTask> {
+  ): TaskProvider<GeneratePackageInfo> {
     val outputDir = project.layout.buildDirectory.dir("generated/sources/nullmarked/java/${javaSourceSet.name}")
     val outputDirPath = outputDir.map { it.asFile.toPath() }
 
     val generateTask =
-        project.tasks.register<GeneratePackageInfoTask>(javaSourceSet.getTaskName("generate", "packageInfo")) {
+        project.tasks.register<GeneratePackageInfo>(javaSourceSet.getTaskName("generate", "packageInfo")) {
           group = "generation"
           description = "Generates @NullMarked package-info.java files for packages missing them."
 
@@ -114,12 +170,12 @@ open class NullMarkedPlugin : Plugin<Project> {
       project: Project,
       javaSourceSet: SourceSet,
       spec: NullMarkedSourceSetSpec,
-      generateTask: TaskProvider<GeneratePackageInfoTask>,
+      generateTask: TaskProvider<GeneratePackageInfo>,
   ) {
     val taskName = javaSourceSet.getTaskName("verify", "packageInfo")
 
     val verifyTask =
-        project.tasks.register<VerifyPackageInfoTask>(taskName) {
+        project.tasks.register<VerifyPackageInfo>(taskName) {
           group = LifecycleBasePlugin.VERIFICATION_GROUP
           description = "Verifies that every package declares a package-info.java."
 
@@ -134,11 +190,13 @@ open class NullMarkedPlugin : Plugin<Project> {
         }
 
     project.tasks.named(javaSourceSet.compileJavaTaskName).configure { dependsOn(verifyTask) }
+    project.tasks.named(LifecycleBasePlugin.CHECK_TASK_NAME).configure { dependsOn(verifyTask) }
   }
 
   private fun configureDefaultJSpecifyDependency(
       project: Project,
       javaSourceSet: SourceSet,
+      spec: NullMarkedSourceSetSpec,
       jspecifyVersion: Provider<String>,
   ) {
     val configurations = project.configurations
@@ -146,6 +204,12 @@ open class NullMarkedPlugin : Plugin<Project> {
 
     configurations.named(javaSourceSet.compileOnlyConfigurationName).configure {
       withDependencies {
+        // A disabled source set is left entirely alone, dependency graph included, which is also the only way to opt
+        // out of the dependency. verifyOnly still gets it: hand-written package-info.java files need @NullMarked on
+        // the compile classpath.
+        if (!spec.enabled.get()) {
+          return@withDependencies
+        }
         val coordinate = parseJSpecifyCoordinate(jspecifyVersion.get())
         if (coordinate.isJSpecifyDeclaredIn(this)) {
           return@withDependencies

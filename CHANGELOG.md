@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog][keepachangelog], and this project adhe
 
 ## [Unreleased]
 
+### Added
+
+- Validate usage of Gradle `8.3` or later explicitly, failing with an explicit message below it.
+
+### Changed
+
+- When `enabled = false`, plugin no longer adds the JSpecify dependency, making the plugin fully inert.
+- Reject invalid package identifiers in `exclude(...)` and `include(...)`, pointing at the build script line rather than
+  failing later at `:generatePackageInfo`.
+
 ## [0.4.1] - 2026-07-26
 
 ### Changed
@@ -67,8 +77,8 @@ The format is based on [Keep a Changelog][keepachangelog], and this project adhe
 
 ### Changed
 
-- Generate `package-info.java` files incrementally; only stale files are pruned and only changed/missing ones are
-  (re)written, instead of wiping and regenerating the whole output directory each run.
+- Generate `package-info.java` files incrementally; only stale files are pruned and only changed/missing ones are (re)
+  written, instead of wiping and regenerating the whole output directory each run.
 
 ## [0.1.0] - 2026-07-18
 

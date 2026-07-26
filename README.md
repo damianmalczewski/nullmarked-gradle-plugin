@@ -16,6 +16,7 @@ Gradle plugin applying [JSpecify](https://jspecify.dev/)'s `@NullMarked` convent
     - [Selecting Packages](#selecting-packages)
     - [Verify-Only Mode](#verify-only-mode)
     - [Additional Source Sets](#additional-source-sets)
+- [Compatibility](#compatibility)
 - [Building](#building)
 - [Using Local Snapshot](#using-local-snapshot)
 - [License](#license)
@@ -32,8 +33,8 @@ Applying `io.github.malczuuu.nullmarked` to a Java project:
 3. **Registers generated directory as a source directory**, so `compileJava` picks it up automatically. Hand-written
    `package-info.java` files always win.
 
-Together with [Error Prone](https://errorprone.info) and [NullAway](https://github.com/uber/NullAway), it helps protect
-the project against nullness bugs without hand-writing an annotated `package-info.java` for every package - see
+**Together with [Error Prone](https://errorprone.info) and [NullAway](https://github.com/uber/NullAway)**, it helps
+protect the project against nullness bugs without hand-writing an annotated `package-info.java` for every package - see
 [`examples/`](examples) for sample working setups, including Kotlin interop.
 
 ## Installation
@@ -51,7 +52,8 @@ Configuration (all optional):
 
 ```kotlin
 nullmarked {
-    // false disables the plugin: nothing is generated and nothing is verified
+    // false makes the plugin inert: nothing is generated, nothing is verified and
+    // no JSpecify dependency is added
     enabled = true
 
     // true verifies instead of generating: no package-info.java is generated and
@@ -81,9 +83,9 @@ Package identifiers follow [ArchUnit's syntax](https://www.archunit.org/userguid
 
 ### Selecting Packages
 
-`exclude(...)` and `include(...)` append to one ordered list of rules, and the **last** rule matching a package decides
-whether it is processed. A package no rule matches is processed, so without any rules every package is - `include` only
-exists to carve exceptions out of an earlier `exclude`:
+To configure packages used for `package-info.java` generation, use `exclude(...)` and `include(...)`. They append to an
+ordered list of rules, where the **last** rule matching a package decides whether it is processed. A package no matching
+rule is automatically included. The `include` clause only exists to carve exceptions out of an earlier `exclude`:
 
 ```kotlin
 nullmarked {
@@ -93,6 +95,10 @@ nullmarked {
     }
 }
 ```
+
+> **These are not Gradle's `include`/`exclude` semantics.** On a Gradle `PatternFilterable`, `CopySpec` or `SourceSet`,
+> an `include` narrows processing down to only what it matches and an `exclude` always wins. Here the last matching rule
+> wins instead, so an `include` on its own changes nothing - packages no rule matches are processed anyway.
 
 A source set's own rules are evaluated after all top-level ones, no matter which block the build script declares first,
 so a source set can re-admit what the top level excluded:
@@ -124,11 +130,15 @@ nullmarked {
 }
 ```
 
-| `enabled` | `verifyOnly` | Generation                      | Verification       |
-|-----------|--------------|---------------------------------|--------------------|
-| `true`    | `false`      | on                              | on (passes)        |
-| `true`    | `true`       | off, previous output is deleted | on (fails on gaps) |
-| `false`   | any          | off, previous output is deleted | off                |
+| `enabled` | `verifyOnly` | Generation                      | Verification       | JSpecify dependency |
+|-----------|--------------|---------------------------------|--------------------|---------------------|
+| `true`    | `false`      | on                              | on (passes)        | added               |
+| `true`    | `true`       | off, previous output is deleted | on (fails on gaps) | added               |
+| `false`   | ignored      | off, previous output is deleted | off                | not added           |
+
+`verifyOnly` still gets the JSpecify dependency, since hand-written `package-info.java` files need `@NullMarked` on the
+compile classpath. With `enabled = false` the plugin touches nothing at all, which is also the only way to opt out of
+the auto-added dependency short of declaring JSpecify yourself.
 
 ### Additional Source Sets
 
@@ -154,9 +164,21 @@ Each `sourceSet` block inherits `enabled`, `verifyOnly` and `headerEnabled` from
 configuration and only needs to set what it wants to override; its `packages { }` rules are appended to the top-level
 ones. To opt a source set in without overriding anything, drop the block: `sourceSet("test")`.
 
+Opting in a name that no Java source set matches fails the build, listing the ones that exist, so a typo does not
+silently do nothing.
+
+## Compatibility
+
+- **Gradle 8.3 or later**
+- **Java 8+**
+
+The plugin reacts to the `java` plugin and scans the Java source directories of each configured source set.
+
 ## Building
 
 ```sh
+./gradlew                  # calls configured Gradle default tasks (spotlessApply and build)
+./gradlew spotlessApply    # format code: ktfmt for *.kt (Kotlin sources), ktlint for *.kts (Gradle buildscript)
 ./gradlew build            # compiles the plugin and runs its unit tests
 ./gradlew integrationTest  # TestKit compatibility test; -Pcompat.gradle.version=9.0.0 targets a specific Gradle
 ```
