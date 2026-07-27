@@ -54,7 +54,7 @@ abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
   private val packagesSpec: NullMarkedPackagesSpec = objects.newInstance()
 
   /** Top-level package rules in declaration order, see [NullMarkedPackagesSpec]. */
-  internal val packageSelectionRules: Provider<List<PackageRule>> = packagesSpec.rules
+  internal val packageRules: Provider<List<PackageRule>> = packagesSpec.rules
 
   /**
    * Version of `org.jspecify:jspecify`, or a full `group:name:version` dependency notation (e.g. to use a fork), added
@@ -80,13 +80,21 @@ abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
       verifyOnly.convention(this@NullMarkedExtension.verifyOnly)
       // Adding the top-level rules while the spec is still empty puts them first, whatever order the build script
       // declares the blocks in.
-      inheritPackageSelectionRules(this@NullMarkedExtension.packageSelectionRules)
+      inheritPackageRules(this@NullMarkedExtension.packageRules)
     }
   }
 
   /**
-   * Configures which packages the plugin processes, see [NullMarkedPackagesSpec]. Rules of every block accumulate, in
-   * declaration order.
+   * Configures which packages the plugin processes, see [NullMarkedPackagesSpec]:
+   * ```
+   * nullmarked {
+   *     packages {
+   *         exclude("..internal..")
+   *     }
+   * }
+   * ```
+   *
+   * Rules of every block accumulate, in declaration order.
    *
    * @param configuration action applied to the package rules
    */
@@ -96,7 +104,12 @@ abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
 
   /**
    * Opts the source set named [name] into `nullmarked` processing, creating its [NullMarkedSourceSetSpec] (with
-   * defaults inherited from this extension's top-level properties) if it isn't already present.
+   * defaults inherited from this extension's top-level properties) if it isn't already present:
+   * ```
+   * nullmarked {
+   *     sourceSet("main21")
+   * }
+   * ```
    *
    * @param name name of the Gradle `SourceSet` to opt in, e.g. `"main21"`
    */
@@ -106,7 +119,17 @@ abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
 
   /**
    * Configures the [NullMarkedSourceSetSpec] for the source set named [name], creating it (with defaults inherited from
-   * this extension's top-level properties) if it isn't already present.
+   * this extension's top-level properties) if it isn't already present:
+   * ```
+   * nullmarked {
+   *     sourceSet("test") {
+   *         verifyOnly = true
+   *         packages {
+   *             exclude("..fixtures..")
+   *         }
+   *     }
+   * }
+   * ```
    *
    * @param name name of the Gradle `SourceSet` to configure, e.g. `"main"` or `"test"`
    * @param configuration action applied to the source set's spec

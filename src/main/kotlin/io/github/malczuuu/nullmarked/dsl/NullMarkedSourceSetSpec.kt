@@ -55,7 +55,7 @@ abstract class NullMarkedSourceSetSpec @Inject constructor(private val name: Str
   private val packagesSpec: NullMarkedPackagesSpec = objects.newInstance()
 
   /** Package rules of this source set in declaration order, top-level ones first. */
-  internal val packageSelectionRules: Provider<List<PackageRule>> = packagesSpec.rules
+  internal val packageRules: Provider<List<PackageRule>> = packagesSpec.rules
 
   /** @return name of the Gradle `SourceSet` this spec configures */
   override fun getName(): String = name
@@ -77,16 +77,7 @@ abstract class NullMarkedSourceSetSpec @Inject constructor(private val name: Str
    *
    * @param rules top-level package rules
    */
-  internal fun inheritPackageSelectionRules(rules: Provider<List<PackageRule>>) {
+  internal fun inheritPackageRules(rules: Provider<List<PackageRule>>) {
     packagesSpec.rules.addAll(rules)
-  }
-
-  /**
-   * Encodes [packageSelectionRules] for the tasks, which take them as plain strings, see [PackageRule.encode].
-   *
-   * @return this source set's rules in declaration order, encoded
-   */
-  internal fun encodedPackageSelectionRules(): Provider<List<String>> = packageSelectionRules.map { rules ->
-    rules.map { it.encode() }
   }
 }

@@ -136,5 +136,5 @@ class NullMarkedExtensionTest {
   }
 
   private val NullMarkedSourceSetSpec.encodedRules: List<String>
-    get() = encodedPackageSelectionRules().get()
+    get() = packageRules.get().map { it.encode() }
 }

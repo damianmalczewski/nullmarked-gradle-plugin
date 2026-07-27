@@ -22,11 +22,12 @@ import javax.inject.Inject
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.listProperty
 
 /**
  * Which packages the plugin processes, configured via `nullmarked { packages { ... } }` (and the same block inside a
- * `sourceSet(...)`).
+ * `sourceSet(...)`, or directly on a `generatePackageInfo` / `verifyPackageInfo` task).
  *
  * Every [include] and [exclude] call appends to an ordered list of rules, and the **last** rule matching a package
  * decides its fate. A package matched by no rule is processed, so with no rules at all every package is. A source set's
@@ -73,6 +74,13 @@ abstract class NullMarkedPackagesSpec @Inject constructor(objects: ObjectFactory
   fun include(vararg packages: String) {
     addRules(included = true, packages = packages)
   }
+
+  /**
+   * Encodes [rules] for the tasks, which take them as plain strings, see [PackageRule.encode].
+   *
+   * @return this spec's rules in declaration order, encoded
+   */
+  internal fun getEncodedRules(): Provider<List<String>> = rules.map { rules -> rules.map { it.encode() } }
 
   // Validating here rather than only where the rules are applied points the failure at the build script line that
   // declared the identifier; the tasks still validate what reaches them through their own inputs.

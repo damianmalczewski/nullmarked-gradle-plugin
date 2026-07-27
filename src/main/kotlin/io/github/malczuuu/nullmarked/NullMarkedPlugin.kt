@@ -151,7 +151,7 @@ open class NullMarkedPlugin : Plugin<Project> {
           // by hand and the verification task enforces it.
           generationEnabled.set(spec.enabled.zip(spec.verifyOnly) { enabled, verifyOnly -> enabled && !verifyOnly })
           headerEnabled.set(spec.headerEnabled)
-          packageSelectionRules.set(spec.encodedPackageSelectionRules())
+          inheritPackageRules(spec.packageRules)
 
           outputDirectory.set(outputDir)
         }
@@ -184,7 +184,7 @@ open class NullMarkedPlugin : Plugin<Project> {
           sourceDirectories.from(project.provider { javaSourceSet.java.srcDirs })
           verificationEnabled.set(spec.enabled)
           verifyOnly.set(spec.verifyOnly)
-          packageSelectionRules.set(spec.encodedPackageSelectionRules())
+          inheritPackageRules(spec.packageRules)
 
           buildCacheMarker.set(project.layout.buildDirectory.file("tmp/nullmarked/$taskName/verification.txt"))
         }

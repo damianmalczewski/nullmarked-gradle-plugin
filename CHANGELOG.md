@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog][keepachangelog], and this project adhe
 
 ## [Unreleased]
 
+### Added
+
+- Add a `packages { }` block on the `GeneratePackageInfo` and `VerifyPackageInfo` tasks, offering the same
+  `exclude(...)` / `include(...)` API as `nullmarked { packages { } }` for builds configuring the tasks using
+  `tasks.withType<GeneratePackageInfo>().configureEach { }`. Its rules come after the ones inherited from the
+  DSL, so they can re-include what those excluded.
+
 ## [0.5.0] - 2026-07-27
 
 ### Added

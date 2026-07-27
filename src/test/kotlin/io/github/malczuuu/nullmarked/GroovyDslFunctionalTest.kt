@@ -91,6 +91,24 @@ class GroovyDslFunctionalTest {
   }
 
   @Test
+  fun `configures task package rules from a groovy build script`() {
+    project.appendToGroovyBuildScript(
+        """
+        tasks.withType(io.github.malczuuu.nullmarked.tasks.GeneratePackageInfo).configureEach {
+            packages {
+                exclude 'com.acme..'
+            }
+        }
+        """
+    )
+
+    val result = project.runner("generatePackageInfo").build()
+
+    assertThat(result.task(":generatePackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(project.generatedPackageInfo("com.acme")).doesNotExist()
+  }
+
+  @Test
   fun `reports an invalid package identifier from a groovy build script`() {
     project.appendToGroovyBuildScript(
         """

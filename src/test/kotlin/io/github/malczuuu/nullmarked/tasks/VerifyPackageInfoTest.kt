@@ -17,11 +17,15 @@
 package io.github.malczuuu.nullmarked.tasks
 
 import io.github.malczuuu.nullmarked.fixtures.TestProject
+import io.github.malczuuu.nullmarked.internal.PackageRule
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.gradle.api.Project
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.VerificationException
+import org.gradle.kotlin.dsl.listProperty
 import org.gradle.kotlin.dsl.register
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.BeforeEach
@@ -32,6 +36,7 @@ class VerifyPackageInfoTest {
 
   @TempDir lateinit var projectDir: File
 
+  private lateinit var project: Project
   private lateinit var testProject: TestProject
   private lateinit var sourceDir: File
   private lateinit var markerFile: File
@@ -39,7 +44,7 @@ class VerifyPackageInfoTest {
 
   @BeforeEach
   fun beforeEach() {
-    val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
+    project = ProjectBuilder.builder().withProjectDir(projectDir).build()
     testProject = TestProject(projectDir)
     sourceDir = testProject.file("src/main/java").apply { mkdirs() }
     markerFile = testProject.file("build/tmp/nullmarked/verifyPackageInfo/verification.txt")
@@ -55,6 +60,10 @@ class VerifyPackageInfoTest {
   private fun writeSource(relativePath: String, content: String = "class Placeholder {}") {
     testProject.writeSource(relativePath, content)
   }
+
+  /** Stands in for the rules the plugin feeds the task from the `nullmarked { ... }` DSL. */
+  private fun inheritedRules(vararg rules: PackageRule): Provider<List<PackageRule>> =
+      project.objects.listProperty<PackageRule>().apply { set(rules.toList()) }
 
   @Test
   fun `passes when every package declares a package-info`() {
@@ -111,9 +120,26 @@ class VerifyPackageInfoTest {
   @Test
   fun `passes when the only offending package is excluded`() {
     writeSource("com/acme/Foo.java")
-    task.packageSelectionRules.set(listOf("-com.acme.."))
+    task.packages { exclude("com.acme..") }
 
     assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+  }
+
+  @Test
+  fun `passes when the only offending package is excluded by an inherited rule`() {
+    writeSource("com/acme/Foo.java")
+    task.inheritPackageRules(inheritedRules(PackageRule(included = false, identifier = "com.acme..")))
+
+    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+  }
+
+  @Test
+  fun `evaluates the task's own packages block after the inherited rules`() {
+    writeSource("com/acme/Foo.java")
+    task.inheritPackageRules(inheritedRules(PackageRule(included = false, identifier = "com.acme..")))
+    task.packages { include("com.acme") }
+
+    assertThatThrownBy { task.verifyPackageInfos() }.hasMessageContaining("com.acme")
   }
 
   @Test

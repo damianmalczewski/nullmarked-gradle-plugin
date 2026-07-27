@@ -18,8 +18,12 @@ package io.github.malczuuu.nullmarked.tasks
 
 import io.github.malczuuu.nullmarked.fixtures.TestProject
 import io.github.malczuuu.nullmarked.internal.PLUGIN_VERSION
+import io.github.malczuuu.nullmarked.internal.PackageRule
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
+import org.gradle.api.Project
+import org.gradle.api.provider.Provider
+import org.gradle.kotlin.dsl.listProperty
 import org.gradle.kotlin.dsl.register
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.BeforeEach
@@ -30,6 +34,7 @@ class GeneratePackageInfoTest {
 
   @TempDir lateinit var projectDir: File
 
+  private lateinit var project: Project
   private lateinit var testProject: TestProject
   private lateinit var sourceDir: File
   private lateinit var outputDir: File
@@ -37,7 +42,7 @@ class GeneratePackageInfoTest {
 
   @BeforeEach
   fun beforeEach() {
-    val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
+    project = ProjectBuilder.builder().withProjectDir(projectDir).build()
     testProject = TestProject(projectDir)
     sourceDir = testProject.file("src/main/java").apply { mkdirs() }
     outputDir = testProject.file("build/generated-package-info")
@@ -55,6 +60,10 @@ class GeneratePackageInfoTest {
   }
 
   private fun generatedPackageInfo(packageName: String): File = TestProject.packageInfoUnder(outputDir, packageName)
+
+  /** Stands in for the rules the plugin feeds the task from the `nullmarked { ... }` DSL. */
+  private fun inheritedRules(vararg rules: PackageRule): Provider<List<PackageRule>> =
+      project.objects.listProperty<PackageRule>().apply { set(rules.toList()) }
 
   @Test
   fun `generates package-info for packages containing java files`() {
@@ -188,7 +197,7 @@ class GeneratePackageInfoTest {
   fun `excludes a single package without touching its subpackages`() {
     writeSource("com/acme/Foo.java")
     writeSource("com/acme/util/Util.java")
-    task.packageSelectionRules.set(listOf("-com.acme"))
+    task.packages { exclude("com.acme") }
 
     task.generatePackageInfos()
 
@@ -201,13 +210,39 @@ class GeneratePackageInfoTest {
     writeSource("com/acme/Foo.java")
     writeSource("com/acme/util/Util.java")
     writeSource("com/other/Bar.java")
-    task.packageSelectionRules.set(listOf("-com.acme.."))
+    task.packages { exclude("com.acme..") }
 
     task.generatePackageInfos()
 
     assertThat(generatedPackageInfo("com.acme")).doesNotExist()
     assertThat(generatedPackageInfo("com.acme.util")).doesNotExist()
     assertThat(generatedPackageInfo("com.other")).exists()
+  }
+
+  @Test
+  fun `evaluates the task's own packages block after the inherited rules`() {
+    writeSource("com/acme/Foo.java")
+    writeSource("com/acme/util/Util.java")
+    task.inheritPackageRules(inheritedRules(PackageRule(included = false, identifier = "com.acme..")))
+    task.packages { include("com.acme.util") }
+
+    task.generatePackageInfos()
+
+    assertThat(generatedPackageInfo("com.acme")).doesNotExist()
+    assertThat(generatedPackageInfo("com.acme.util")).exists()
+  }
+
+  @Test
+  fun `accumulates rules of multiple packages blocks in declaration order`() {
+    writeSource("com/acme/Foo.java")
+    writeSource("com/acme/util/Util.java")
+    task.packages { exclude("com.acme..") }
+    task.packages { include("com.acme.util") }
+
+    task.generatePackageInfos()
+
+    assertThat(generatedPackageInfo("com.acme")).doesNotExist()
+    assertThat(generatedPackageInfo("com.acme.util")).exists()
   }
 
   @Test

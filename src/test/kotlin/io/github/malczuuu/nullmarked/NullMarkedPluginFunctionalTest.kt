@@ -172,6 +172,73 @@ class NullMarkedPluginFunctionalTest {
   }
 
   @Test
+  fun `changing a package rule re-runs generation`() {
+    project.runner("generatePackageInfo").build()
+    assertThat(project.generatedPackageInfo("com.acme")).exists()
+
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            packages {
+                exclude("com.acme..")
+            }
+        }
+        """
+    )
+    val secondRun = project.runner("generatePackageInfo").build()
+
+    assertThat(secondRun.task(":generatePackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(project.generatedPackageInfo("com.acme")).doesNotExist()
+  }
+
+  @Test
+  fun `packages can be excluded by configuring the tasks directly`() {
+    project.appendToBuildScript(
+        """
+        tasks.withType<io.github.malczuuu.nullmarked.tasks.GeneratePackageInfo>().configureEach {
+            packages {
+                exclude("com.acme..")
+            }
+        }
+
+        tasks.withType<io.github.malczuuu.nullmarked.tasks.VerifyPackageInfo>().configureEach {
+            packages {
+                exclude("com.acme..")
+            }
+        }
+        """
+    )
+
+    val result = project.runner("compileJava", "--configuration-cache").build()
+
+    assertThat(result.task(":verifyPackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(project.generatedPackageInfo("com.acme")).doesNotExist()
+  }
+
+  @Test
+  fun `task-level package rules are evaluated after the extension ones`() {
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            packages {
+                exclude("com.acme..")
+            }
+        }
+
+        tasks.withType<io.github.malczuuu.nullmarked.tasks.GeneratePackageInfo>().configureEach {
+            packages {
+                include("com.acme")
+            }
+        }
+        """
+    )
+
+    project.runner("generatePackageInfo").build()
+
+    assertThat(project.generatedPackageInfo("com.acme")).exists()
+  }
+
+  @Test
   fun `package rules survive the configuration cache`() {
     project.appendToBuildScript(
         """
