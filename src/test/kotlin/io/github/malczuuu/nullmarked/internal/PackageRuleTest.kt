@@ -38,4 +38,9 @@ class PackageRuleTest {
   fun `rejects an unprefixed rule`() {
     assertThatThrownBy { PackageRule.decode("com.acme") }.isInstanceOf(InvalidUserDataException::class.java)
   }
+
+  @Test
+  fun `rejects an empty rule`() {
+    assertThatThrownBy { PackageRule.decode("") }.isInstanceOf(InvalidUserDataException::class.java)
+  }
 }

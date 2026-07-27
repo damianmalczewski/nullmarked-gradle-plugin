@@ -22,9 +22,11 @@ import io.github.malczuuu.nullmarked.tasks.GeneratePackageInfo
 import io.github.malczuuu.nullmarked.tasks.VerifyPackageInfo
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatCode
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Project
+import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.javadoc.Javadoc
@@ -61,6 +63,11 @@ class NullMarkedPluginTest {
 
   private fun taskDependencyNames(taskName: String): List<String> =
       project.tasks.getByName(taskName).let { task -> task.taskDependencies.getDependencies(task).map { it.name } }
+
+  /** Runs the `afterEvaluate` hooks, which is where the plugin validates the source sets opted into. */
+  private fun evaluate() {
+    (project as ProjectInternal).evaluate()
+  }
 
   @Test
   fun `registers extension with defaults`() {
@@ -310,6 +317,81 @@ class NullMarkedPluginTest {
         }
 
     assertThat(testCompileOnlyDependencies).containsExactly("org.jspecify:jspecify:${JSPECIFY_VERSION}")
+  }
+
+  @Test
+  fun `check depends on verification`() {
+    applyPlugins()
+
+    assertThat(taskDependencyNames("check")).contains("verifyPackageInfo")
+  }
+
+  @Test
+  fun `disabled source set gets no jspecify dependency`() {
+    applyPlugins()
+    project.extensions.getByType<NullMarkedExtension>().enabled.set(false)
+
+    assertThat(compileOnlyDependencies()).isEmpty()
+  }
+
+  @Test
+  fun `a same-group dependency of another name does not count as a jspecify declaration`() {
+    applyPlugins()
+    project.dependencies.add("compileOnly", "org.jspecify:jspecify-something-else:0.3.0")
+
+    assertThat(compileOnlyJSpecifyDependencies())
+        .containsExactly("org.jspecify:jspecify-something-else:0.3.0", "org.jspecify:jspecify:${JSPECIFY_VERSION}")
+  }
+
+  @Test
+  fun `a same-name dependency of another group does not count as a jspecify declaration`() {
+    applyPlugins()
+    project.dependencies.add("compileOnly", "com.example:jspecify:0.3.0")
+
+    assertThat(compileOnlyDependencies())
+        .containsExactly("com.example:jspecify:0.3.0", "org.jspecify:jspecify:${JSPECIFY_VERSION}")
+  }
+
+  @Test
+  fun `accepts source sets that exist once the project is evaluated`() {
+    applyPlugins()
+    project.extensions.getByType<NullMarkedExtension>().sourceSet("test") {}
+
+    assertThatCode { evaluate() }.doesNotThrowAnyException()
+  }
+
+  @Test
+  fun `evaluation of a java-less project skips the source set check`() {
+    project.plugins.apply("io.github.malczuuu.nullmarked")
+    project.extensions.getByType<NullMarkedExtension>().sourceSet("nope") {}
+
+    assertThatCode { evaluate() }.doesNotThrowAnyException()
+  }
+
+  @Test
+  fun `fails on a single source set that no java source set matches`() {
+    applyPlugins()
+    project.extensions.getByType<NullMarkedExtension>().sourceSet("nope") {}
+
+    assertThatThrownBy { evaluate() }
+        .rootCause()
+        .isInstanceOf(InvalidUserDataException::class.java)
+        .hasMessageContaining("no source set named 'nope'")
+        .hasMessageContaining("Available: main, test")
+  }
+
+  @Test
+  fun `fails listing every source set that no java source set matches`() {
+    applyPlugins()
+    val extension = project.extensions.getByType<NullMarkedExtension>()
+    extension.sourceSet("nope") {}
+    extension.sourceSet("alsoNope") {}
+
+    assertThatThrownBy { evaluate() }
+        .rootCause()
+        .isInstanceOf(InvalidUserDataException::class.java)
+        // The container keeps its elements sorted by name, so the message lists them alphabetically.
+        .hasMessageContaining("no source sets named 'alsoNope', 'nope'")
   }
 
   @Test

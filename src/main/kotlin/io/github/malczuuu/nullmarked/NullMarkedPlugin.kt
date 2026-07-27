@@ -22,9 +22,9 @@ import io.github.malczuuu.nullmarked.internal.JSPECIFY_VERSION
 import io.github.malczuuu.nullmarked.internal.JSpecifyCoordinate
 import io.github.malczuuu.nullmarked.internal.MINIMUM_GRADLE_VERSION
 import io.github.malczuuu.nullmarked.internal.parseJSpecifyCoordinate
+import io.github.malczuuu.nullmarked.internal.requireMinimumGradleVersion
 import io.github.malczuuu.nullmarked.tasks.GeneratePackageInfo
 import io.github.malczuuu.nullmarked.tasks.VerifyPackageInfo
-import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -66,7 +66,7 @@ open class NullMarkedPlugin : Plugin<Project> {
    * @param target The target object
    */
   override fun apply(target: Project) {
-    checkGradleVersion()
+    requireMinimumGradleVersion(GradleVersion.current())
 
     val extension = target.extensions.create<NullMarkedExtension>("nullmarked")
     extension.enabled.convention(true)
@@ -97,15 +97,6 @@ open class NullMarkedPlugin : Plugin<Project> {
       if (plugins.hasPlugin(JavaPlugin::class.java)) {
         checkOptedInSourceSetsExist(extension, extensions.getByType<JavaPluginExtension>().sourceSets)
       }
-    }
-  }
-
-  private fun checkGradleVersion() {
-    if (GradleVersion.current() < GradleVersion.version(MINIMUM_GRADLE_VERSION)) {
-      throw GradleException(
-          "The io.github.malczuuu.nullmarked plugin requires Gradle $MINIMUM_GRADLE_VERSION or later, but was applied " +
-              "to Gradle ${GradleVersion.current().version}."
-      )
     }
   }
 

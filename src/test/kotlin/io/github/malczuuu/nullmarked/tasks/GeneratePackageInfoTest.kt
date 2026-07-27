@@ -246,6 +246,31 @@ class GeneratePackageInfoTest {
   }
 
   @Test
+  fun `leaves files other than package-info alone in the output directory`() {
+    writeSource("com/acme/Foo.java")
+    val stray = File(outputDir, "com/acme/Stray.java").apply { parentFile.mkdirs() }.also { it.writeText("stray") }
+
+    task.generatePackageInfos()
+
+    assertThat(stray).exists()
+    assertThat(generatedPackageInfo("com.acme")).exists()
+  }
+
+  @Test
+  fun `pruning stops at a directory still holding another package`() {
+    writeSource("com/acme/one/One.java")
+    writeSource("com/acme/two/Two.java")
+    task.generatePackageInfos()
+
+    task.packages { exclude("com.acme.one") }
+    task.generatePackageInfos()
+
+    assertThat(generatedPackageInfo("com.acme.one")).doesNotExist()
+    assertThat(File(outputDir, "com/acme/one")).doesNotExist()
+    assertThat(generatedPackageInfo("com.acme.two")).exists()
+  }
+
+  @Test
   fun `merges packages across multiple source directories`() {
     val secondSourceDir = File(projectDir, "src/main/java-extra").apply { mkdirs() }
     task.sourceDirectories.from(secondSourceDir)

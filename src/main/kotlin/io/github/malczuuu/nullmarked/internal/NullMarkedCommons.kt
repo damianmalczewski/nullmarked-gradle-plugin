@@ -16,8 +16,11 @@
 
 package io.github.malczuuu.nullmarked.internal
 
+import java.io.InputStream
 import java.util.Properties
+import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
+import org.gradle.util.GradleVersion
 
 /** Group of the default `org.jspecify:jspecify` dependency coordinate. */
 internal const val JSPECIFY_GROUP = "org.jspecify"
@@ -35,10 +38,9 @@ internal const val MINIMUM_GRADLE_VERSION = "8.3"
 internal val PACKAGE_IDENTIFIER_REGEX = Regex(PACKAGE_IDENTIFIER_PATTERN)
 
 /** Plugin version baked into the jar as a resource at build time; `unknown` if the resource is missing. */
-internal val PLUGIN_VERSION: String =
-    ResourceAnchor::class.java.getResourceAsStream("nullmarked.properties")?.use { stream ->
-      Properties().apply { load(stream) }.getProperty("version")
-    } ?: "unknown"
+internal val PLUGIN_VERSION: String = readPluginVersion {
+  ResourceAnchor::class.java.getResourceAsStream("nullmarked.properties")
+}
 
 /**
  * A resolved `group:name:version` dependency coordinate for a JSpecify (or JSpecify fork) artifact.
@@ -70,6 +72,33 @@ internal fun parseJSpecifyCoordinate(value: String): JSpecifyCoordinate {
   }
 }
 
-private class ResourceAnchor
+/**
+ * Fails on a Gradle older than [MINIMUM_GRADLE_VERSION], where the plugin would break on missing APIs with a far less
+ * obvious error.
+ *
+ * @param current Gradle version the plugin is applied on
+ * @throws GradleException if [current] is older than [MINIMUM_GRADLE_VERSION]
+ */
+internal fun requireMinimumGradleVersion(current: GradleVersion) {
+  if (current < GradleVersion.version(MINIMUM_GRADLE_VERSION)) {
+    throw GradleException(
+        "The io.github.malczuuu.nullmarked plugin requires Gradle $MINIMUM_GRADLE_VERSION or later, but was applied " +
+            "to Gradle ${current.version}."
+    )
+  }
+}
+
+/**
+ * Reads the plugin version off the resource baked into the jar at build time. A jar repackaged without that resource,
+ * or with one carrying no `version` entry, leaves the version unknown rather than failing the build.
+ *
+ * @param resource opens the properties resource, returning `null` when it is missing
+ * @return version found in the resource, or `unknown`
+ */
+internal fun readPluginVersion(resource: () -> InputStream?): String =
+    resource()?.use { stream -> Properties().apply { load(stream) }.getProperty("version") } ?: "unknown"
+
+/** Anchors [PLUGIN_VERSION]'s resource lookup to this package, where the build writes `nullmarked.properties`. */
+private object ResourceAnchor
 
 private const val PACKAGE_IDENTIFIER_PATTERN = """(\.\.)?[\w*]+((\.|\.\.)[\w*]+)*(\.\.)?|\.\."""

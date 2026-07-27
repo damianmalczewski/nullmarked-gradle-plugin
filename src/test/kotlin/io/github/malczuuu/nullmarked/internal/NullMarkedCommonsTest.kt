@@ -17,8 +17,11 @@
 package io.github.malczuuu.nullmarked.internal
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatCode
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
+import org.gradle.util.GradleVersion
 import org.junit.jupiter.api.Test
 
 class NullMarkedCommonsTest {
@@ -42,5 +45,41 @@ class NullMarkedCommonsTest {
     assertThatThrownBy { parseJSpecifyCoordinate("org.jspecify:jspecify") }
         .isInstanceOf(InvalidUserDataException::class.java)
         .hasMessageContaining("org.jspecify:jspecify")
+  }
+
+  @Test
+  fun `rejects a gradle older than the minimum supported one`() {
+    assertThatThrownBy { requireMinimumGradleVersion(GradleVersion.version("8.2")) }
+        .isInstanceOf(GradleException::class.java)
+        .hasMessageContaining("requires Gradle $MINIMUM_GRADLE_VERSION or later")
+        .hasMessageContaining("to Gradle 8.2")
+  }
+
+  @Test
+  fun `accepts the minimum supported gradle`() {
+    assertThatCode { requireMinimumGradleVersion(GradleVersion.version(MINIMUM_GRADLE_VERSION)) }
+        .doesNotThrowAnyException()
+  }
+
+  @Test
+  fun `reads the plugin version off the properties resource`() {
+    val version = readPluginVersion { "version=1.2.3".byteInputStream() }
+
+    assertThat(version).isEqualTo("1.2.3")
+  }
+
+  @Test
+  fun `falls back to unknown when the properties resource is missing`() {
+    assertThat(readPluginVersion { null }).isEqualTo("unknown")
+  }
+
+  @Test
+  fun `falls back to unknown when the properties resource carries no version`() {
+    assertThat(readPluginVersion { "other=1.2.3".byteInputStream() }).isEqualTo("unknown")
+  }
+
+  @Test
+  fun `stamps the version baked into the jar at build time`() {
+    assertThat(PLUGIN_VERSION).isNotEqualTo("unknown")
   }
 }
