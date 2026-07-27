@@ -4,7 +4,7 @@ plugins {
     application
     java
     kotlin("jvm") version "2.4.10"
-    id("io.github.malczuuu.nullmarked") version "0.4.1"
+    id("io.github.malczuuu.nullmarked") version "0.5.0"
     id("net.ltgt.errorprone") version "5.1.0"
 }
 

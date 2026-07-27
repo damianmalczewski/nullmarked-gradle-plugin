@@ -44,7 +44,7 @@ Apply plugin in `build.gradle.kts`.
 ```kotlin
 plugins {
     java
-    id("io.github.malczuuu.nullmarked") version "0.4.1"
+    id("io.github.malczuuu.nullmarked") version "0.5.0"
 }
 ```
 
@@ -206,7 +206,7 @@ The plugin reacts to the `java` plugin and scans the Java source directories of 
    ```kotlin
    plugins {
        java
-       id("io.github.malczuuu.nullmarked") version "0.4.2-SNAPSHOT"
+       id("io.github.malczuuu.nullmarked") version "0.5.1-SNAPSHOT"
    }
    ```
 
