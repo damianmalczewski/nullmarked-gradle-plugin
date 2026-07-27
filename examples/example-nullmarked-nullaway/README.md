@@ -71,7 +71,7 @@ cat build/generated/sources/nullmarked/java/main/com/example/orders/package-info
 ```kotlin
 plugins {
     java
-  id("io.github.malczuuu.nullmarked") version "0.5.0"
+  id("io.github.malczuuu.nullmarked") version "0.6.0"
     id("net.ltgt.errorprone") version "5.1.0"
 }
 
