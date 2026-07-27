@@ -96,10 +96,6 @@ nullmarked {
 }
 ```
 
-> **These are not Gradle's `include`/`exclude` semantics.** On a Gradle `PatternFilterable`, `CopySpec` or `SourceSet`,
-> an `include` narrows processing down to only what it matches and an `exclude` always wins. Here the last matching rule
-> wins instead, so an `include` on its own changes nothing - packages no rule matches are processed anyway.
-
 A source set's own rules are evaluated after all top-level ones, no matter which block the build script declares first,
 so a source set can re-admit what the top level excluded:
 
