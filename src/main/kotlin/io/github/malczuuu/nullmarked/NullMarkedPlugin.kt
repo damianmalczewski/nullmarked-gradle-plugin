@@ -58,7 +58,7 @@ import org.gradle.util.GradleVersion
  *
  * Requires Gradle [MINIMUM_GRADLE_VERSION] or later. Applying it to a project without the `java` plugin does nothing.
  */
-open class NullMarkedPlugin : Plugin<Project> {
+class NullMarkedPlugin : Plugin<Project> {
 
   /**
    * Apply this plugin to the given target object.
