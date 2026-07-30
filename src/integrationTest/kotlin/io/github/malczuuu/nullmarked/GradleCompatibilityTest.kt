@@ -70,7 +70,9 @@ class GradleCompatibilityTest {
     val result = runner.buildAndFail()
 
     assertThat(result.task(":verifyPackageInfo")?.outcome).isEqualTo(TaskOutcome.FAILED)
-    assertThat(result.output).contains("1 package(s) without a package-info.java").contains("com.acme")
+    assertThat(result.output)
+        .contains("1 package(s) with a package-info.java problem")
+        .contains("com.acme: missing package-info.java")
     assertThat(project.generatedPackageInfo("com.acme")).doesNotExist()
   }
 }
