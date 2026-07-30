@@ -33,6 +33,8 @@ Applying `io.github.malczuuu.nullmarked` to a Java project:
 2. **Adds the JSpecify dependency** as `compileOnly`, unless the build script already declares it there itself.
 3. **Registers generated directory as a source directory**, so `compileJava` picks it up automatically. Hand-written
    `package-info.java` files always win.
+4. **Verifies** that `package-info.java` files are present for each package (generated or hand-written) and if nullness
+   annotations are applied on packages.
 
 **Together with [Error Prone](https://errorprone.info) and [NullAway](https://github.com/uber/NullAway)**, it helps
 protect the project against nullness bugs without hand-writing an annotated `package-info.java` for every package - see
@@ -71,6 +73,11 @@ nullmarked {
     // which packages are processed; empty means all of them
     packages {
         exclude("com.acme.generated..")
+    }
+
+    // package-info.java verification strictness; lenient() is the default
+    verify {
+        lenient()
     }
 }
 ```
@@ -180,6 +187,9 @@ Found 2 package(s) with a package-info.java problem:
   - com.acme.bare: package-info.java present but declares neither @NullMarked nor @NullUnmarked
 Add a package-info.java to each of them, or exclude them via nullmarked.packages
 ```
+
+> [!IMPORTANT]
+> Note that verification is based on text analysis of `package-info.java` files, not the compiled output.
 
 ### Additional Source Sets
 
