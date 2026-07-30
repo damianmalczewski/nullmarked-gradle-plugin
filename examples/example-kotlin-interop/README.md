@@ -79,10 +79,10 @@ cat build/generated/sources/nullmarked/java/main/com/example/greeting/package-in
 
 ```kotlin
 plugins {
-    java
     application
+    java
     kotlin("jvm") version "2.4.0"
-    id("io.github.malczuuu.nullmarked") version "0.6.0"
+    id("io.github.malczuuu.nullmarked") version "0.7.0"
 }
 
 kotlin {
