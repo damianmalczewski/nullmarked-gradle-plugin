@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog][keepachangelog], and this project adhe
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-30
+
 ### Added
 
 - Add a `verify { }` block for selecting verification strictness: `lenient()` (default - a `package-info.java` only
