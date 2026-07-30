@@ -213,6 +213,9 @@ spotless {
 }
 
 tasks.withType<Jar>().configureEach {
+    if (name == "javadocJar") {
+        enabled = false
+    }
     manifest {
         attributes["Implementation-Title"] = project.name
         attributes["Implementation-Version"] = project.version
