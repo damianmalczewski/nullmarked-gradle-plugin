@@ -18,6 +18,7 @@ package io.github.malczuuu.nullmarked.tasks
 
 import io.github.malczuuu.nullmarked.fixtures.TestProject
 import io.github.malczuuu.nullmarked.internal.PackageRule
+import io.github.malczuuu.nullmarked.internal.VerificationMode
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
@@ -26,6 +27,7 @@ import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.VerificationException
 import org.gradle.kotlin.dsl.listProperty
+import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.register
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.BeforeEach
@@ -65,6 +67,10 @@ class VerifyPackageInfoTest {
   private fun inheritedRules(vararg rules: PackageRule): Provider<List<PackageRule>> =
       project.objects.listProperty<PackageRule>().apply { set(rules.toList()) }
 
+  /** Stands in for the mode the plugin feeds the task from the `nullmarked { ... }` DSL. */
+  private fun inheritedMode(mode: VerificationMode): Provider<VerificationMode> =
+      project.objects.property<VerificationMode>().apply { set(mode) }
+
   @Test
   fun `passes when every package declares a package-info`() {
     writeSource("com/acme/Foo.java")
@@ -82,8 +88,8 @@ class VerifyPackageInfoTest {
     assertThatThrownBy { task.verifyPackageInfos() }
         .isInstanceOf(VerificationException::class.java)
         .hasMessageContaining("2 package(s)")
-        .hasMessageContaining("com.acme")
-        .hasMessageContaining("com.other")
+        .hasMessageContaining("com.acme: missing package-info.java")
+        .hasMessageContaining("com.other: missing package-info.java")
     assertThat(markerFile).doesNotExist()
   }
 
@@ -174,5 +180,195 @@ class VerifyPackageInfoTest {
     task.verifyPackageInfos()
 
     assertThat(markerFile.readText()).isEqualTo(before)
+  }
+
+  @Test
+  fun `lenient mode ignores content of an existing package-info`() {
+    writeSource("com/acme/Foo.java")
+    writeSource("com/acme/package-info.java", "package com.acme;")
+    task.verify { lenient() }
+
+    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+  }
+
+  @Test
+  fun `explicit mode fails a bare package-info`() {
+    writeSource("com/acme/Foo.java")
+    writeSource("com/acme/package-info.java", "package com.acme;")
+    task.verify { explicit() }
+
+    assertThatThrownBy { task.verifyPackageInfos() }
+        .hasMessageContaining("com.acme: package-info.java present but declares neither @NullMarked nor @NullUnmarked")
+  }
+
+  @Test
+  fun `explicit mode passes a package-info declaring NullMarked`() {
+    writeSource("com/acme/Foo.java")
+    writeSource(
+        "com/acme/package-info.java",
+        """
+        @NullMarked
+        package com.acme;
+
+        import org.jspecify.annotations.NullMarked;
+        """,
+    )
+    task.verify { explicit() }
+
+    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+  }
+
+  @Test
+  fun `explicit mode passes a package-info declaring NullUnmarked`() {
+    writeSource("com/acme/Foo.java")
+    writeSource(
+        "com/acme/package-info.java",
+        """
+        @NullUnmarked
+        package com.acme;
+
+        import org.jspecify.annotations.NullUnmarked;
+        """,
+    )
+    task.verify { explicit() }
+
+    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+  }
+
+  @Test
+  fun `explicit mode recognizes a fully-qualified annotation`() {
+    writeSource("com/acme/Foo.java")
+    writeSource(
+        "com/acme/package-info.java",
+        """
+        @org.jspecify.annotations.NullMarked
+        package com.acme;
+        """,
+    )
+    task.verify { explicit() }
+
+    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+  }
+
+  @Test
+  fun `strict mode fails a package-info declaring only NullUnmarked`() {
+    writeSource("com/acme/Foo.java")
+    writeSource(
+        "com/acme/package-info.java",
+        """
+        @NullUnmarked
+        package com.acme;
+
+        import org.jspecify.annotations.NullUnmarked;
+        """,
+    )
+    task.verify { strict() }
+
+    assertThatThrownBy { task.verifyPackageInfos() }
+        .hasMessageContaining("com.acme: package-info.java declares @NullUnmarked, but @NullMarked is required")
+  }
+
+  @Test
+  fun `strict mode fails a bare package-info`() {
+    writeSource("com/acme/Foo.java")
+    writeSource("com/acme/package-info.java", "package com.acme;")
+    task.verify { strict() }
+
+    assertThatThrownBy { task.verifyPackageInfos() }.hasMessageContaining("declares neither @NullMarked")
+  }
+
+  @Test
+  fun `strict mode passes a package-info declaring NullMarked`() {
+    writeSource("com/acme/Foo.java")
+    writeSource(
+        "com/acme/package-info.java",
+        """
+        @NullMarked
+        package com.acme;
+
+        import org.jspecify.annotations.NullMarked;
+        """,
+    )
+    task.verify { strict() }
+
+    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+  }
+
+  @Test
+  fun `annotations are recognized in any order`() {
+    writeSource("com/acme/Foo.java")
+    writeSource(
+        "com/acme/package-info.java",
+        """
+        package com.acme;
+
+        import org.jspecify.annotations.NullMarked;
+
+        @NullMarked class Dummy {}
+        """,
+    )
+    task.verify { explicit() }
+
+    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+  }
+
+  @Test
+  fun `explicit mode fails a package-info declaring both NullMarked and NullUnmarked`() {
+    writeSource("com/acme/Foo.java")
+    writeSource(
+        "com/acme/package-info.java",
+        """
+        @NullMarked
+        @NullUnmarked
+        package com.acme;
+        """,
+    )
+    task.verify { explicit() }
+
+    assertThatThrownBy { task.verifyPackageInfos() }
+        .hasMessageContaining("com.acme: package-info.java declares both @NullMarked and @NullUnmarked")
+  }
+
+  @Test
+  fun `strict mode also fails conflicting annotations`() {
+    writeSource("com/acme/Foo.java")
+    writeSource(
+        "com/acme/package-info.java",
+        """
+        @NullMarked
+        @NullUnmarked
+        package com.acme;
+        """,
+    )
+    task.verify { strict() }
+
+    assertThatThrownBy { task.verifyPackageInfos() }.hasMessageContaining("declares both @NullMarked and @NullUnmarked")
+  }
+
+  @Test
+  fun `defaults to lenient mode`() {
+    writeSource("com/acme/Foo.java")
+    writeSource("com/acme/package-info.java", "package com.acme;")
+
+    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+  }
+
+  @Test
+  fun `inherits the mode fed by the plugin`() {
+    writeSource("com/acme/Foo.java")
+    writeSource("com/acme/package-info.java", "package com.acme;")
+    task.inheritVerificationMode(inheritedMode(VerificationMode.STRICT))
+
+    assertThatThrownBy { task.verifyPackageInfos() }.hasMessageContaining("declares neither @NullMarked")
+  }
+
+  @Test
+  fun `the task's own verify block overrides an inherited mode`() {
+    writeSource("com/acme/Foo.java")
+    writeSource("com/acme/package-info.java", "package com.acme;")
+    task.inheritVerificationMode(inheritedMode(VerificationMode.STRICT))
+    task.verify { lenient() }
+
+    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
   }
 }

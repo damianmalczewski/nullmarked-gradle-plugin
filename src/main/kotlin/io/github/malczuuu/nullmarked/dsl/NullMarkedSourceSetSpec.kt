@@ -17,6 +17,7 @@
 package io.github.malczuuu.nullmarked.dsl
 
 import io.github.malczuuu.nullmarked.internal.PackageRule
+import io.github.malczuuu.nullmarked.internal.VerificationMode
 import javax.inject.Inject
 import org.gradle.api.Action
 import org.gradle.api.Named
@@ -57,6 +58,14 @@ abstract class NullMarkedSourceSetSpec @Inject constructor(private val name: Str
   /** Package rules of this source set in declaration order, top-level ones first. */
   internal val packageRules: Provider<List<PackageRule>> = packagesSpec.rules
 
+  private val verifySpec: NullMarkedVerifySpec = objects.newInstance()
+
+  /**
+   * `package-info.java` verification strictness of this source set, see [NullMarkedExtension.verificationMode].
+   * Defaults to `nullmarked.verify`.
+   */
+  internal val verificationMode: Property<VerificationMode> = verifySpec.mode
+
   /** @return name of the Gradle `SourceSet` this spec configures */
   override fun getName(): String = name
 
@@ -71,6 +80,16 @@ abstract class NullMarkedSourceSetSpec @Inject constructor(private val name: Str
   }
 
   /**
+   * Configures `package-info.java` verification strictness for this source set, see [NullMarkedVerifySpec]. Defaults to
+   * `nullmarked.verify` unless overridden here.
+   *
+   * @param configuration action applied to the verification mode
+   */
+  fun verify(configuration: Action<in NullMarkedVerifySpec>) {
+    configuration.execute(verifySpec)
+  }
+
+  /**
    * Adds the top-level rules ahead of this source set's own ones. Called by [NullMarkedExtension] right after this spec
    * is created, while it is still empty, so that source set rules always come last however the build script orders the
    * blocks.
@@ -79,5 +98,16 @@ abstract class NullMarkedSourceSetSpec @Inject constructor(private val name: Str
    */
   internal fun inheritPackageRules(rules: Provider<List<PackageRule>>) {
     packagesSpec.rules.addAll(rules)
+  }
+
+  /**
+   * Defaults this source set's verification mode to the top-level one. Called by [NullMarkedExtension] right after this
+   * spec is created; a later [verify] call on this spec always overrides it, whatever order the build script declares
+   * the blocks in.
+   *
+   * @param mode top-level verification mode
+   */
+  internal fun inheritVerificationMode(mode: Provider<VerificationMode>) {
+    verifySpec.mode.convention(mode)
   }
 }

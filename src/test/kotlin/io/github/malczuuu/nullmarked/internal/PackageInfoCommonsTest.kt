@@ -22,6 +22,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 
 class PackageInfoCommonsTest {
 
@@ -34,10 +37,6 @@ class PackageInfoCommonsTest {
   fun beforeEach() {
     testProject = TestProject(projectDir)
     sourceDir = testProject.file("src/main/java").apply { mkdirs() }
-  }
-
-  private fun writeSource(relativePath: String, content: String = "class Placeholder {}") {
-    testProject.writeSource(relativePath, content)
   }
 
   @Test
@@ -269,6 +268,145 @@ class PackageInfoCommonsTest {
   }
 
   @Test
+  fun `lenient violations only report missing package-info`() {
+    writeSource("com/acme/Foo.java")
+    writeSource("com/other/Bar.java")
+    writeSource("com/other/package-info.java", "package com.other;")
+
+    val result = findPackageInfoViolations(listOf(sourceDir), emptyList(), VerificationMode.LENIENT)
+
+    assertThat(result).hasSize(1)
+    assertThat(result.single()).isInstanceOf(PackageInfoViolation.Missing::class.java)
+    assertThat(result.single().packageName).isEqualTo("com.acme")
+  }
+
+  @Test
+  fun `explicit violations flag a bare package-info`() {
+    writeSource("com/acme/Foo.java")
+    writeSource("com/acme/package-info.java", "package com.acme;")
+
+    val result = findPackageInfoViolations(listOf(sourceDir), emptyList(), VerificationMode.EXPLICIT)
+
+    assertThat(result.single()).isInstanceOf(PackageInfoViolation.Bare::class.java)
+  }
+
+  @Test
+  fun `explicit violations accept NullUnmarked`() {
+    writeSource("com/acme/Foo.java")
+    writeSource(
+        "com/acme/package-info.java",
+        """
+        @NullUnmarked
+        package com.acme;
+        """,
+    )
+
+    val result = findPackageInfoViolations(listOf(sourceDir), emptyList(), VerificationMode.EXPLICIT)
+
+    assertThat(result).isEmpty()
+  }
+
+  @Test
+  fun `strict violations reject NullUnmarked`() {
+    writeSource("com/acme/Foo.java")
+    writeSource(
+        "com/acme/package-info.java",
+        """
+        @NullUnmarked
+        package com.acme;
+        """,
+    )
+
+    val result = findPackageInfoViolations(listOf(sourceDir), emptyList(), VerificationMode.STRICT)
+
+    assertThat(result.single()).isInstanceOf(PackageInfoViolation.NotNullMarked::class.java)
+  }
+
+  @Test
+  fun `violations flag conflicting annotations in both explicit and strict mode`() {
+    writeSource("com/acme/Foo.java")
+    writeSource(
+        "com/acme/package-info.java",
+        """
+        @NullMarked
+        @NullUnmarked
+        package com.acme;
+        """,
+    )
+
+    val explicitResult = findPackageInfoViolations(listOf(sourceDir), emptyList(), VerificationMode.EXPLICIT)
+    val strictResult = findPackageInfoViolations(listOf(sourceDir), emptyList(), VerificationMode.STRICT)
+
+    assertThat(explicitResult.single()).isInstanceOf(PackageInfoViolation.Conflicting::class.java)
+    assertThat(strictResult.single()).isInstanceOf(PackageInfoViolation.Conflicting::class.java)
+  }
+
+  @Test
+  fun `violations ignore annotations mentioned only in comments`() {
+    writeSource("com/acme/Foo.java")
+    writeSource(
+        "com/acme/package-info.java",
+        """
+        /**
+         * Package intentionally left @NullUnmarked for legacy reasons, avoid @NullMarked here.
+         */
+        // still bare: no @NullMarked applied below
+        package com.acme;
+        """,
+    )
+
+    val result = findPackageInfoViolations(listOf(sourceDir), emptyList(), VerificationMode.EXPLICIT)
+
+    assertThat(result.single()).isInstanceOf(PackageInfoViolation.Bare::class.java)
+  }
+
+  @Test
+  fun `violations recognize a real annotation alongside an unrelated comment mention`() {
+    writeSource("com/acme/Foo.java")
+    writeSource(
+        "com/acme/package-info.java",
+        """
+        // do not use @NullUnmarked here
+        @NullMarked
+        package com.acme;
+        """,
+    )
+
+    val result = findPackageInfoViolations(listOf(sourceDir), emptyList(), VerificationMode.STRICT)
+
+    assertThat(result).isEmpty()
+  }
+
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("whitespaceRobustnessCases")
+  internal fun `annotation detection tolerates whitespace and same-line placement`(
+      description: String,
+      content: String,
+      mode: VerificationMode,
+      expectedViolation: Class<out PackageInfoViolation>?,
+  ) {
+    writeSource("com/acme/Foo.java")
+    writeSourceExact("com/acme/package-info.java", content)
+
+    val result = findPackageInfoViolations(listOf(sourceDir), emptyList(), mode)
+
+    if (expectedViolation == null) {
+      assertThat(result).isEmpty()
+    } else {
+      assertThat(result.single()).isInstanceOf(expectedViolation)
+    }
+  }
+
+  @Test
+  fun `violations respect package rules`() {
+    writeSource("com/acme/Foo.java")
+
+    val result = findPackageInfoViolations(listOf(sourceDir), listOf("-com.acme.."), VerificationMode.STRICT)
+
+    assertThat(result).isEmpty()
+  }
+
+  @Test
   fun `leaves an up-to-date package-info untouched`() {
     val outputDir = testProject.file("build/generated-package-info")
     val existing =
@@ -282,5 +420,50 @@ class PackageInfoCommonsTest {
 
     assertThat(existing).hasContent("package com.acme;\n")
     assertThat(existing.lastModified()).isEqualTo(lastModifiedBefore)
+  }
+
+  private fun writeSource(relativePath: String, content: String = "class Placeholder {}") {
+    testProject.writeSource(relativePath, content)
+  }
+
+  // Writes content byte-for-byte, unlike writeSource, whose trimIndent() would eat the leading whitespace these tests
+  // are about.
+  private fun writeSourceExact(relativePath: String, content: String) {
+    testProject.file("src/main/java/$relativePath").apply {
+      parentFile.mkdirs()
+      writeText(content)
+    }
+  }
+
+  companion object {
+
+    @JvmStatic
+    fun whitespaceRobustnessCases(): List<Arguments> =
+        listOf(
+            Arguments.of(
+                "leading whitespace before the annotation",
+                "   \t  @NullMarked\npackage com.acme;\n",
+                VerificationMode.EXPLICIT,
+                null,
+            ),
+            Arguments.of(
+                "leading whitespace before the package declaration",
+                "@NullMarked\n\n\n   \tpackage com.acme;\n",
+                VerificationMode.EXPLICIT,
+                null,
+            ),
+            Arguments.of(
+                "annotation sharing a line with the package declaration",
+                "@NullMarked package com.acme;\n",
+                VerificationMode.EXPLICIT,
+                null,
+            ),
+            Arguments.of(
+                "NullUnmarked sharing a line with the package declaration, indented",
+                "    @NullUnmarked   package com.acme;\n",
+                VerificationMode.STRICT,
+                PackageInfoViolation.NotNullMarked::class.java,
+            ),
+        )
   }
 }

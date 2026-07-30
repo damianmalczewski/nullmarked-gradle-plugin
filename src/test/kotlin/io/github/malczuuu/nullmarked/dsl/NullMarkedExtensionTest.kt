@@ -16,6 +16,7 @@
 
 package io.github.malczuuu.nullmarked.dsl
 
+import io.github.malczuuu.nullmarked.internal.VerificationMode
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.create
@@ -35,6 +36,7 @@ class NullMarkedExtensionTest {
     extension.enabled.convention(true)
     extension.headerEnabled.convention(true)
     extension.verifyOnly.convention(false)
+    extension.verificationMode.convention(VerificationMode.LENIENT)
   }
 
   @Test
@@ -47,6 +49,27 @@ class NullMarkedExtensionTest {
     assertThat(spec.headerEnabled.get()).isTrue()
     assertThat(spec.verifyOnly.get()).isFalse()
     assertThat(spec.encodedRules).containsExactly("-com.acme..")
+    assertThat(spec.verificationMode.get()).isEqualTo(VerificationMode.LENIENT)
+  }
+
+  @Test
+  fun `sourceSet spec inherits a top-level verification mode and can override it`() {
+    extension.verify { strict() }
+
+    val inheriting = extension.sourceSets.maybeCreate("test")
+    extension.sourceSet("main21") { verify { lenient() } }
+
+    assertThat(inheriting.verificationMode.get()).isEqualTo(VerificationMode.STRICT)
+    assertThat(extension.sourceSets.getByName("main21").verificationMode.get()).isEqualTo(VerificationMode.LENIENT)
+  }
+
+  @Test
+  fun `sourceSet spec tracks later top-level verification mode changes when not overridden`() {
+    val spec = extension.sourceSets.maybeCreate("test")
+
+    extension.verify { explicit() }
+
+    assertThat(spec.verificationMode.get()).isEqualTo(VerificationMode.EXPLICIT)
   }
 
   @Test

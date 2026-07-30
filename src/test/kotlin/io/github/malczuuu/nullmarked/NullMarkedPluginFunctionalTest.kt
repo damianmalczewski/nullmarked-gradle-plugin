@@ -461,7 +461,9 @@ class NullMarkedPluginFunctionalTest {
     val result = project.runner("compileJava").buildAndFail()
 
     assertThat(result.task(":verifyPackageInfo")?.outcome).isEqualTo(TaskOutcome.FAILED)
-    assertThat(result.output).contains("1 package(s) without a package-info.java").contains("com.acme")
+    assertThat(result.output)
+        .contains("1 package(s) with a package-info.java problem")
+        .contains("com.acme: missing package-info.java")
     assertThat(result.output).contains("disabling nullmarked.verifyOnly")
     assertThat(result.output).doesNotContain("com.acme.manual")
     assertThat(project.generatedPackageInfo("com.acme")).doesNotExist()
@@ -531,6 +533,83 @@ class NullMarkedPluginFunctionalTest {
 
     assertThat(result.task(":verifyPackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(result.task(":compileJava")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+  }
+
+  @Test
+  fun `strict mode passes on generated and hand-written NullMarked package-info`() {
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            verify {
+                strict()
+            }
+        }
+        """
+    )
+
+    val result = project.runner("verifyPackageInfo").build()
+
+    assertThat(result.task(":verifyPackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+  }
+
+  @Test
+  fun `strict mode fails on a hand-written package-info missing NullMarked`() {
+    project.writeSource(
+        "com/acme/bare/Baz.java",
+        """
+        package com.acme.bare;
+
+        public class Baz {}
+        """,
+    )
+    project.writeSource("com/acme/bare/package-info.java", "package com.acme.bare;")
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            verify {
+                strict()
+            }
+        }
+        """
+    )
+
+    val result = project.runner("verifyPackageInfo").buildAndFail()
+
+    assertThat(result.task(":verifyPackageInfo")?.outcome).isEqualTo(TaskOutcome.FAILED)
+    assertThat(result.output)
+        .contains("com.acme.bare: package-info.java present but declares neither @NullMarked nor @NullUnmarked")
+  }
+
+  @Test
+  fun `a task-level verify block overrides the extension one`() {
+    project.writeSource(
+        "com/acme/bare/Baz.java",
+        """
+        package com.acme.bare;
+
+        public class Baz {}
+        """,
+    )
+    project.writeSource("com/acme/bare/package-info.java", "package com.acme.bare;")
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            verify {
+                strict()
+            }
+        }
+
+        tasks.withType<io.github.malczuuu.nullmarked.tasks.VerifyPackageInfo>().configureEach {
+            verify {
+                lenient()
+            }
+        }
+        """
+    )
+
+    val result = project.runner("verifyPackageInfo").build()
+
+    assertThat(result.task(":verifyPackageInfo")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
   }
 
   @Test

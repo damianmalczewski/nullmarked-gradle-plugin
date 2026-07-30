@@ -47,9 +47,8 @@ internal fun computeExpectedPackageInfos(
 
 /**
  * Finds packages that contain at least one `.java` file, have no `package-info.java` of their own, and are processed
- * according to [packageRules]. Used both to decide what to generate and to decide what verification is missing; which
- * of the two it answers depends only on whether the caller passes the generated output directory in
- * [sourceDirectories].
+ * according to [packageRules]. Used to decide what [io.github.malczuuu.nullmarked.tasks.GeneratePackageInfo] generates,
+ * and shares its directory scan with [findPackageInfoViolations].
  *
  * @param sourceDirectories Java source directories to scan
  * @param packageRules ordered package rules, as encoded by [PackageRule.encode]
@@ -59,31 +58,31 @@ internal fun findPackagesWithoutPackageInfo(
     sourceDirectories: Iterable<File>,
     packageRules: List<String>,
 ): Set<String> {
-  val results = sortedSetOf<String>()
-  val packagesWithPackageInfo = sortedSetOf<String>()
-
-  sourceDirectories
-      .filter { it.isDirectory }
-      .forEach { sourceDir ->
-        sourceDir
-            .walkTopDown()
-            .filter { it.isFile && it.extension == "java" }
-            .forEach { file ->
-              val packageName = findPackageNameOf(sourceDir, file)
-              if (file.name == "package-info.java") {
-                packagesWithPackageInfo += packageName
-              } else if (packageName.isNotEmpty()) {
-                results += packageName
-              }
-            }
-      }
-
-  results.removeAll(packagesWithPackageInfo)
-
+  val scan = scanPackageInfoState(sourceDirectories)
   val filter = PackageFilter(packageRules)
-  results.removeIf { packageName -> filter.isExcluded(packageName) }
+  return (scan.packagesWithJavaFiles - scan.packageInfoFiles.keys).filterNot { filter.isExcluded(it) }.toSortedSet()
+}
 
-  return results
+/**
+ * Finds every `package-info.java` problem among packages that contain at least one `.java` file and are processed
+ * according to [packageRules], judged by [mode]: [VerificationMode.LENIENT] only checks presence, while
+ * [VerificationMode.EXPLICIT] and [VerificationMode.STRICT] also inspect content for `@NullMarked`/`@NullUnmarked`.
+ *
+ * @param sourceDirectories Java source directories to scan
+ * @param packageRules ordered package rules, as encoded by [PackageRule.encode]
+ * @param mode verification strictness
+ * @return violations found, one per offending package, in package name order
+ */
+internal fun findPackageInfoViolations(
+    sourceDirectories: Iterable<File>,
+    packageRules: List<String>,
+    mode: VerificationMode,
+): List<PackageInfoViolation> {
+  val scan = scanPackageInfoState(sourceDirectories)
+  val filter = PackageFilter(packageRules)
+  return scan.packagesWithJavaFiles
+      .filterNot { filter.isExcluded(it) }
+      .mapNotNull { packageName -> classifyPackageInfo(packageName, scan.packageInfoFiles[packageName], mode) }
 }
 
 /**
@@ -139,6 +138,77 @@ internal fun ensurePackageInfoFile(
     existingFile.rewritePackageInfo(content)
   }
 }
+
+/**
+ * Result of walking a set of source directories once: which packages have at least one hand-written `.java` file (other
+ * than `package-info.java`), and the `package-info.java` file each package has, if any.
+ */
+private data class PackageInfoScan(val packagesWithJavaFiles: Set<String>, val packageInfoFiles: Map<String, File>)
+
+private fun scanPackageInfoState(sourceDirectories: Iterable<File>): PackageInfoScan {
+  val packagesWithJavaFiles = sortedSetOf<String>()
+  val packageInfoFiles = sortedMapOf<String, File>()
+
+  sourceDirectories
+      .filter { it.isDirectory }
+      .forEach { sourceDir ->
+        sourceDir
+            .walkTopDown()
+            .filter { it.isFile && it.extension == "java" }
+            .forEach { file ->
+              val packageName = findPackageNameOf(sourceDir, file)
+              if (file.name == "package-info.java") {
+                packageInfoFiles[packageName] = file
+              } else if (packageName.isNotEmpty()) {
+                packagesWithJavaFiles += packageName
+              }
+            }
+      }
+
+  return PackageInfoScan(packagesWithJavaFiles, packageInfoFiles)
+}
+
+/**
+ * Judges a single package's `package-info.java` (or lack of one) against [mode].
+ *
+ * @return the violation found, or `null` if the package satisfies [mode]
+ */
+private fun classifyPackageInfo(
+    packageName: String,
+    packageInfoFile: File?,
+    mode: VerificationMode,
+): PackageInfoViolation? {
+  if (packageInfoFile == null) {
+    return PackageInfoViolation.Missing(packageName)
+  }
+  if (mode == VerificationMode.LENIENT) {
+    return null
+  }
+
+  val content = stripComments(packageInfoFile.readText())
+  val hasNullMarked = NULL_MARKED_ANNOTATION_REGEX.containsMatchIn(content)
+  val hasNullUnmarked = NULL_UNMARKED_ANNOTATION_REGEX.containsMatchIn(content)
+
+  return when {
+    hasNullMarked && hasNullUnmarked -> PackageInfoViolation.Conflicting(packageName)
+    hasNullMarked -> null
+    hasNullUnmarked -> if (mode == VerificationMode.STRICT) PackageInfoViolation.NotNullMarked(packageName) else null
+    else -> PackageInfoViolation.Bare(packageName)
+  }
+}
+
+// Strips block and line comments so a `package-info.java` merely mentioning an annotation in prose (e.g. a Javadoc
+// explaining why the package is left bare) is not mistaken for the annotation actually being applied.
+private fun stripComments(content: String): String =
+    content.replace(BLOCK_COMMENT_REGEX, "").replace(LINE_COMMENT_REGEX, "")
+
+private val BLOCK_COMMENT_REGEX = Regex("""/\*.*?\*/""", RegexOption.DOT_MATCHES_ALL)
+private val LINE_COMMENT_REGEX = Regex("""//[^\n]*""")
+
+// Matches both the simple annotation name and any dotted-qualified form (e.g. org.jspecify.annotations.NullMarked),
+// without resolving imports: a lightweight text scan rather than a full Java parse.
+private val NULL_MARKED_ANNOTATION_REGEX = Regex("""@(?:[\w.]+\.)?NullMarked\b""")
+private val NULL_UNMARKED_ANNOTATION_REGEX = Regex("""@(?:[\w.]+\.)?NullUnmarked\b""")
 
 private fun preparePackageInfoHeader(headerEnabled: Boolean, pluginVersion: String): String =
     if (headerEnabled) {

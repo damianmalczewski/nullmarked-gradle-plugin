@@ -15,6 +15,7 @@ Gradle plugin applying [JSpecify](https://jspecify.dev/)'s `@NullMarked` convent
 - [Installation](#installation)
     - [Selecting Packages](#selecting-packages)
     - [Verify-Only Mode](#verify-only-mode)
+    - [Verification Strictness](#verification-strictness)
     - [Additional Source Sets](#additional-source-sets)
 - [Compatibility](#compatibility)
 - [Building](#building)
@@ -135,6 +136,50 @@ nullmarked {
 `verifyOnly` still gets the JSpecify dependency, since hand-written `package-info.java` files need `@NullMarked` on the
 compile classpath. With `enabled = false` the plugin touches nothing at all, which is also the only way to opt out of
 the auto-added dependency short of declaring JSpecify yourself.
+
+### Verification Strictness
+
+`verifyPackageInfo` judges each package's `package-info.java` against a strictness level, configured with a
+`verify { }` block:
+
+```kotlin
+nullmarked {
+    verify {
+        strict()   // lenient() is the default, explicit() sits in between
+    }
+}
+```
+
+- `lenient()` (default) - a `package-info.java` only needs to exist; its content is not inspected.
+- `explicit()` - it must also declare `@NullMarked` or `@NullUnmarked`; a bare file fails.
+- `strict()` - it must declare `@NullMarked` specifically; `@NullUnmarked` or a bare file fails.
+
+Both `explicit()` and `strict()` fail on a file declaring both annotations.
+
+The same block works on a `sourceSet(...)` or directly on a `verifyPackageInfo` task, overriding whatever it would
+otherwise inherit - whichever call happens last wins:
+
+```kotlin
+nullmarked {
+    verify {
+        strict()
+    }
+    sourceSet("test") {
+        verify {
+            lenient()   // tests stay lenient
+        }
+    }
+}
+```
+
+Failures list a reason per offending package:
+
+```
+Found 2 package(s) with a package-info.java problem:
+  - com.acme: missing package-info.java
+  - com.acme.bare: package-info.java present but declares neither @NullMarked nor @NullUnmarked
+Add a package-info.java to each of them, or exclude them via nullmarked.packages
+```
 
 ### Additional Source Sets
 

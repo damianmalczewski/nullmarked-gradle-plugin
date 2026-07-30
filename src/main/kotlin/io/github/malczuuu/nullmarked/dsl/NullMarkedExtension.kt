@@ -17,6 +17,7 @@
 package io.github.malczuuu.nullmarked.dsl
 
 import io.github.malczuuu.nullmarked.internal.PackageRule
+import io.github.malczuuu.nullmarked.internal.VerificationMode
 import javax.inject.Inject
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
@@ -56,6 +57,11 @@ abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
   /** Top-level package rules in declaration order, see [NullMarkedPackagesSpec]. */
   internal val packageRules: Provider<List<PackageRule>> = packagesSpec.rules
 
+  private val verifySpec: NullMarkedVerifySpec = objects.newInstance()
+
+  /** Top-level `package-info.java` verification strictness, see [NullMarkedVerifySpec]. Defaults to lenient. */
+  internal val verificationMode: Property<VerificationMode> = verifySpec.mode
+
   /**
    * Version of `org.jspecify:jspecify`, or a full `group:name:version` dependency notation (e.g. to use a fork), added
    * as a `compileOnly` dependency when the build script does not declare JSpecify itself. Defaults to `"1.0.0"`.
@@ -81,6 +87,7 @@ abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
       // Adding the top-level rules while the spec is still empty puts them first, whatever order the build script
       // declares the blocks in.
       inheritPackageRules(this@NullMarkedExtension.packageRules)
+      inheritVerificationMode(this@NullMarkedExtension.verificationMode)
     }
   }
 
@@ -100,6 +107,22 @@ abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
    */
   fun packages(configuration: Action<in NullMarkedPackagesSpec>) {
     configuration.execute(packagesSpec)
+  }
+
+  /**
+   * Configures top-level `package-info.java` verification strictness, see [NullMarkedVerifySpec]:
+   * ```
+   * nullmarked {
+   *     verify {
+   *         strict()
+   *     }
+   * }
+   * ```
+   *
+   * @param configuration action applied to the verification mode
+   */
+  fun verify(configuration: Action<in NullMarkedVerifySpec>) {
+    configuration.execute(verifySpec)
   }
 
   /**

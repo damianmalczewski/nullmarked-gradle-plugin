@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog][keepachangelog], and this project adhe
 
 ## [Unreleased]
 
+### Added
+
+- Add a `verify { }` block for selecting verification strictness: `lenient()` (default - a `package-info.java` only
+  needs to exist), `explicit()` (it must also declare `@NullMarked` or `@NullUnmarked`; a bare file fails), and
+  `strict()` (it must declare `@NullMarked` specifically). Both `explicit()` and `strict()` fail on a file declaring
+  both annotations.
+
+### Changed
+
+- Verification failures now list a reason per offending package instead of only its name.
+
 ## [0.6.0] - 2026-07-27
 
 ### Added

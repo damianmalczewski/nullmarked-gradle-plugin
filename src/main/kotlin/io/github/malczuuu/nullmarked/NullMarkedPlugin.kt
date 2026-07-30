@@ -21,6 +21,7 @@ import io.github.malczuuu.nullmarked.dsl.NullMarkedSourceSetSpec
 import io.github.malczuuu.nullmarked.internal.JSPECIFY_VERSION
 import io.github.malczuuu.nullmarked.internal.JSpecifyCoordinate
 import io.github.malczuuu.nullmarked.internal.MINIMUM_GRADLE_VERSION
+import io.github.malczuuu.nullmarked.internal.VerificationMode
 import io.github.malczuuu.nullmarked.internal.parseJSpecifyCoordinate
 import io.github.malczuuu.nullmarked.internal.requireMinimumGradleVersion
 import io.github.malczuuu.nullmarked.tasks.GeneratePackageInfo
@@ -72,6 +73,7 @@ class NullMarkedPlugin : Plugin<Project> {
     extension.enabled.convention(true)
     extension.headerEnabled.convention(true)
     extension.verifyOnly.convention(false)
+    extension.verificationMode.convention(VerificationMode.LENIENT)
     extension.jspecifyVersion.convention(JSPECIFY_VERSION)
     extension.sourceSets.maybeCreate(SourceSet.MAIN_SOURCE_SET_NAME)
 
@@ -176,6 +178,7 @@ class NullMarkedPlugin : Plugin<Project> {
           verificationEnabled.set(spec.enabled)
           verifyOnly.set(spec.verifyOnly)
           inheritPackageRules(spec.packageRules)
+          inheritVerificationMode(spec.verificationMode)
 
           buildCacheMarker.set(project.layout.buildDirectory.file("tmp/nullmarked/$taskName/verification.txt"))
         }
