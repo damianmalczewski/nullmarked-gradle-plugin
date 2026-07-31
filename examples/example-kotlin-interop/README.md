@@ -80,7 +80,7 @@ plugins {
     application
     java
     kotlin("jvm") version "2.4.0"
-    id("io.github.malczuuu.nullmarked") version "0.7.0"
+    id("io.github.malczuuu.nullmarked") version "0.7.1"
 }
 
 kotlin {

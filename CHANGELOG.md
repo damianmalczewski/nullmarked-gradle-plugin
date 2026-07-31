@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog][keepachangelog], and this project adhe
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-07-31
+
 ### Changed
 
 - Bump default version of JSpecify provisioned by this plugin to `1.0.1`.
