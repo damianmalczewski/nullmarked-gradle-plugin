@@ -29,7 +29,7 @@ internal const val JSPECIFY_GROUP = "org.jspecify"
 internal const val JSPECIFY_NAME = "jspecify"
 
 /** Default value of `nullmarked.jspecifyVersion` used when the build script does not configure one. */
-internal const val JSPECIFY_VERSION = "1.0.0"
+internal const val JSPECIFY_VERSION = "1.0.1"
 
 /** Oldest Gradle release the plugin supports, enforced when it is applied. */
 internal const val MINIMUM_GRADLE_VERSION = "8.3"
@@ -52,7 +52,7 @@ internal val PLUGIN_VERSION: String = readPluginVersion {
 internal data class JSpecifyCoordinate(val group: String, val name: String, val version: String)
 
 /**
- * Accepts either a bare version (`"1.0.0"`, applied to the default `org.jspecify:jspecify` coordinate) or a full
+ * Accepts either a bare version (e.g. `"1.0.1"`, applied to the default `org.jspecify:jspecify` coordinate) or a full
  * `group:name:version` dependency notation, letting users point at a fork of JSpecify.
  *
  * @param value `nullmarked.jspecifyVersion` value to parse
@@ -66,8 +66,8 @@ internal fun parseJSpecifyCoordinate(value: String): JSpecifyCoordinate {
     3 -> JSpecifyCoordinate(parts[0], parts[1], parts[2])
     else ->
         throw InvalidUserDataException(
-            "nullmarked.jspecifyVersion must be either a version (e.g. \"1.0.0\") or a full dependency notation " +
-                "(e.g. \"org.jspecify:jspecify:1.0.0\"), but was: \"$value\"."
+            "nullmarked.jspecifyVersion must be either a version (e.g. \"1.0.1\") or a full dependency notation " +
+                "(e.g. \"org.jspecify:jspecify:1.0.1\"), but was: \"$value\"."
         )
   }
 }

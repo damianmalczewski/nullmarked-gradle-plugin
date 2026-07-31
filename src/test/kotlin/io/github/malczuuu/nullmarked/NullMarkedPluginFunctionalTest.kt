@@ -62,7 +62,7 @@ class NullMarkedPluginFunctionalTest {
   fun `jspecify appears on the compile classpath`() {
     val result = project.runner("dependencies", "--configuration", "compileClasspath").build()
 
-    assertThat(result.output).contains("org.jspecify:jspecify:1.0.0")
+    assertThat(result.output).contains("org.jspecify:jspecify:1.0.1")
   }
 
   @Test
@@ -82,7 +82,7 @@ class NullMarkedPluginFunctionalTest {
     val secondRun = project.runner("resolveCompileClasspath", "--configuration-cache").build()
 
     assertThat(secondRun.output).contains("Configuration cache entry reused")
-    assertThat(secondRun.output).contains("RESOLVED jspecify-1.0.0.jar")
+    assertThat(secondRun.output).contains("RESOLVED jspecify-1.0.1.jar")
   }
 
   @Test
@@ -98,7 +98,7 @@ class NullMarkedPluginFunctionalTest {
     val result = project.runner("dependencies", "--configuration", "compileClasspath").build()
 
     assertThat(result.output).contains("org.jspecify:jspecify:0.3.0")
-    assertThat(result.output).doesNotContain("org.jspecify:jspecify:1.0.0")
+    assertThat(result.output).doesNotContain("org.jspecify:jspecify:1.0.1")
   }
 
   @Test
@@ -111,7 +111,7 @@ class NullMarkedPluginFunctionalTest {
 
         // A disabled plugin adds no jspecify dependency, so the sample sources bring their own.
         dependencies {
-            compileOnly("org.jspecify:jspecify:1.0.0")
+            compileOnly("org.jspecify:jspecify:1.0.1")
         }
         """
     )
@@ -150,7 +150,7 @@ class NullMarkedPluginFunctionalTest {
 
     val result = project.runner("dependencies", "--configuration", "compileClasspath").build()
 
-    assertThat(result.output).contains("org.jspecify:jspecify:1.0.0")
+    assertThat(result.output).contains("org.jspecify:jspecify:1.0.1")
   }
 
   @Test
@@ -362,7 +362,7 @@ class NullMarkedPluginFunctionalTest {
 
     val result = project.runner("dependencies", "--configuration", "testCompileClasspath").build()
 
-    assertThat(result.output).contains("org.jspecify:jspecify:1.0.0")
+    assertThat(result.output).contains("org.jspecify:jspecify:1.0.1")
   }
 
   @Test
@@ -524,7 +524,7 @@ class NullMarkedPluginFunctionalTest {
 
         // A disabled plugin adds no jspecify dependency, so the sample sources bring their own.
         dependencies {
-            compileOnly("org.jspecify:jspecify:1.0.0")
+            compileOnly("org.jspecify:jspecify:1.0.1")
         }
         """
     )

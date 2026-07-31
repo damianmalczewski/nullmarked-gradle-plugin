@@ -69,7 +69,7 @@ class GroovyDslFunctionalTest {
             enabled = true
             headerEnabled = false
             verifyOnly = false
-            jspecifyVersion = '1.0.0'
+            jspecifyVersion = '1.0.1'
             packages {
                 exclude '..internal..'
             }

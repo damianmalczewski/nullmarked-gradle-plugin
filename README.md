@@ -68,7 +68,7 @@ nullmarked {
 
     // version of the auto-added org.jspecify:jspecify dependency, or a full
     // "group:name:version" notation to use a fork instead
-    jspecifyVersion = "1.0.0"
+    jspecifyVersion = "1.0.1"
 
     // which packages are processed; empty means all of them
     packages {

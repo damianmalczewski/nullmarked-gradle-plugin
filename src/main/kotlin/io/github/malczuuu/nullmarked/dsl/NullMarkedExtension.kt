@@ -64,7 +64,7 @@ abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
 
   /**
    * Version of `org.jspecify:jspecify`, or a full `group:name:version` dependency notation (e.g. to use a fork), added
-   * as a `compileOnly` dependency when the build script does not declare JSpecify itself. Defaults to `"1.0.0"`.
+   * as a `compileOnly` dependency when the build script does not declare JSpecify itself. Defaults to `"1.0.1"`.
    */
   abstract val jspecifyVersion: Property<String>
 
