@@ -136,6 +136,49 @@ class TestProject(val dir: File) {
     )
   }
 
+  /**
+   * On top of [writeSampleSources], writes packages meant to exercise every `nullmarked { ... }` DSL feature in one
+   * build: `com.acme.internal` (excluded by a top-level `packages { exclude(...) }`), `com.acme.internal.reincluded`
+   * (re-included by a later `include(...)`), `com.acme.taskexcluded` (excluded only by a task-level `packages { ... }`
+   * block) and a `test` source set class with no `package-info.java` of its own (left alone by a disabled `test`
+   * `sourceSet { ... }` override).
+   */
+  fun writeFeatureCoverageSources() {
+    writeSampleSources()
+    writeSource(
+        "com/acme/internal/Skipped.java",
+        """
+        package com.acme.internal;
+
+        public class Skipped {}
+        """,
+    )
+    writeSource(
+        "com/acme/internal/reincluded/Included.java",
+        """
+        package com.acme.internal.reincluded;
+
+        public class Included {}
+        """,
+    )
+    writeSource(
+        "com/acme/taskexcluded/Thing.java",
+        """
+        package com.acme.taskexcluded;
+
+        public class Thing {}
+        """,
+    )
+    writeTestSource(
+        "com/acme/FooTest.java",
+        """
+        package com.acme;
+
+        class FooTest {}
+        """,
+    )
+  }
+
   fun runner(vararg arguments: String): GradleRunner =
       GradleRunner.create().withProjectDir(dir).withPluginClasspath().withArguments(*arguments)
 

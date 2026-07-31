@@ -1,7 +1,5 @@
 # NullMarked & Kotlin interop example
 
-[![CI | Examples](https://github.com/damianmalczewski/nullmarked-gradle-plugin/actions/workflows/ci-examples.yml/badge.svg)](https://github.com/damianmalczewski/nullmarked-gradle-plugin/actions/workflows/ci-examples.yml)
-
 Standalone Gradle project showing `io.github.malczuuu.nullmarked` used to make Java APIs interop cleanly with
 [Kotlin's null safety](https://kotlinlang.org/docs/java-interop.html#nullability-annotations).
 

@@ -36,7 +36,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-dependency-submission-${{ runner.os }}-java-25-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties', '**/gradle-wrapper.properties') }}
+          key: gradle-dependency-submission-${{ runner.os }}-java-25-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties', './gradle/wrapper/**') }}
           restore-keys: |
             gradle-dependency-submission-${{ runner.os }}-java-25-
 

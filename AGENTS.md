@@ -8,7 +8,9 @@ Gradle plugin (`io.github.malczuuu.nullmarked`) applying JSpecify's `@NullMarked
 
 - Default tasks: `./gradlew` runs `spotlessApply build` (format, compile, unit test).
 - `./gradlew test --tests "*.PackagePatternTest"` - single test class/method.
-- `./gradlew integrationTest` - TestKit compat tests; `-Pcompat.gradle.version=9.0.0` targets a specific Gradle.
+- `./gradlew integrationTest` - TestKit compat tests; `-Pcompat.gradle.version=9.0.0` targets a specific Gradle. Must
+  include a test project with every feature turned on at once, kept mirrored test-for-test between
+  `KotlinDslCompatibilityTest` and `GroovyDslCompatibilityTest`.
 - `./gradlew allTest` - unit + integration.
 - Java 17 toolchain builds the plugin; compiled output targets Java 8 bytecode.
 
@@ -30,14 +32,12 @@ Gradle plugin (`io.github.malczuuu.nullmarked`) applying JSpecify's `@NullMarked
   `VerifyPackageInfo` per source set, and adds the JSpecify dependency unless the source set is disabled or the build
   script declares one itself.
 - `GeneratePackageInfo` writes one `package-info.java` per package that has `.java` files but none of its own.
-- `VerifyPackageInfo` runs before compilation and fails listing every package still missing one.
-- `NullMarkedExtension` is the `nullmarked { }` DSL, with per-source-set overrides (`NullMarkedSourceSetSpec`) and
-  package rules (`NullMarkedPackagesSpec`). Rules keep declaration order and the last one matching a package wins
-  (`PackageFilter`); unmatched packages are processed. Identifiers use ArchUnit's syntax, parsed by `PackagePattern`.
-- `PackageRule` is internal, so tasks take rules as encoded `"-org.acme.."` / `"+org.acme.api"` strings - build scripts
-  only ever see the DSL.
-- Plugin version is baked into a resource (`generatePluginProperties` in `build.gradle.kts`, written under the 
-  `internal` subpackage) and read back to stamp the generated file header.
+- `VerifyPackageInfo` runs before compilation and fails listing every package still missing one. Also can inspect the
+  used annotations, depending on verification mode.
+- `NullMarkedExtension` is the `nullmarked { }` DSL, with:
+  - `NullMarkedSourceSetSpec` - per-source-set overrides,
+  - `NullMarkedPackagesSpec` - package selection rules,
+  - `NullMarkedVerifySpec` - `package-info.java` verification mode.
 
 ## Coding Rules
 

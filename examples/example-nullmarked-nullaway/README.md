@@ -1,7 +1,5 @@
 # NullMarked & NullAway example
 
-[![CI | Examples](https://github.com/damianmalczewski/nullmarked-gradle-plugin/actions/workflows/ci-examples.yml/badge.svg)](https://github.com/damianmalczewski/nullmarked-gradle-plugin/actions/workflows/ci-examples.yml)
-
 Standalone Gradle project showing `io.github.malczuuu.nullmarked` used together with [NullAway][NullAway]
 and [Error Prone][ErrorProne].
 

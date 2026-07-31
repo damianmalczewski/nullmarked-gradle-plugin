@@ -32,7 +32,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: release-${{ runner.os }}-java-25-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties', '**/gradle-wrapper.properties') }}
+          key: release-${{ runner.os }}-java-25-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties', './gradle/wrapper/**') }}
           restore-keys: |
             release-${{ runner.os }}-java-25-
 

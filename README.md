@@ -47,7 +47,7 @@ Apply plugin in `build.gradle.kts`.
 ```kotlin
 plugins {
     java
-    id("io.github.malczuuu.nullmarked") version "0.6.0"
+    id("io.github.malczuuu.nullmarked") version "0.7.0"
 }
 ```
 
@@ -122,9 +122,9 @@ nullmarked {
 
 ### Verify-Only Mode
 
-Every configured source set gets a `verifyPackageInfo` task (`verifyTestPackageInfo`, `verifyMain21PackageInfo`, etc.)
-that `compileJava` depends on. It fails the build listing every package that has Java files but no `package-info.java`,
-counting hand-written and generated ones alike and skipping whatever the `packages { }` rules exclude.
+Every configured source set gets a `verifyPackageInfo` task that `compileJava` depends on. It fails the build listing
+every package that has Java files but no `package-info.java`, counting hand-written and generated ones alike and
+skipping whatever the `packages { }` rules exclude.
 
 Set `verifyOnly = true` to opt out of generated code and only enforce hand-written `package-info.java` files:
 
@@ -140,9 +140,9 @@ nullmarked {
 | `true`    | `true`       | off, previous output is deleted | on (fails on gaps) | added               |
 | `false`   | ignored      | off, previous output is deleted | off                | not added           |
 
-`verifyOnly` still gets the JSpecify dependency, since hand-written `package-info.java` files need `@NullMarked` on the
-compile classpath. With `enabled = false` the plugin touches nothing at all, which is also the only way to opt out of
-the auto-added dependency short of declaring JSpecify yourself.
+The `verifyOnly` mode still gets the JSpecify dependency, since hand-written `package-info.java` files need annotations
+on the compile classpath. With `enabled = false` the plugin touches nothing at all, which is also the only way to opt
+out of the auto-added dependency short of declaring JSpecify yourself.
 
 ### Verification Strictness
 
@@ -163,8 +163,8 @@ nullmarked {
 
 Both `explicit()` and `strict()` fail on a file declaring both annotations.
 
-The same block works on a `sourceSet(...)` or directly on a `verifyPackageInfo` task, overriding whatever it would
-otherwise inherit - whichever call happens last wins:
+The same block works on a `sourceSet (...), overriding whatever it would otherwise inherit - whichever call happens last
+wins:
 
 ```kotlin
 nullmarked {

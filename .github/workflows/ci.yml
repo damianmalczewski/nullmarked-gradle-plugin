@@ -53,7 +53,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ci-${{ runner.os }}-java-${{ matrix.java }}-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties', '**/gradle-wrapper.properties') }}
+          key: ci-${{ runner.os }}-java-${{ matrix.java }}-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties', './gradle/wrapper/**') }}
           restore-keys: |
             ci-${{ runner.os }}-java-${{ matrix.java }}-
 
@@ -124,7 +124,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-compat-${{ runner.os }}-gradle-${{ matrix.gradle }}-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties', '**/gradle-wrapper.properties') }}
+          key: gradle-compat-${{ runner.os }}-gradle-${{ matrix.gradle }}-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties', './gradle/wrapper/**') }}
           restore-keys: |
             gradle-compat-${{ runner.os }}-gradle-${{ matrix.gradle }}-
 
