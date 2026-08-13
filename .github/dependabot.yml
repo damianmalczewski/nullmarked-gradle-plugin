@@ -6,6 +6,8 @@ updates:
       interval: "monthly"
     target-branch: main
     open-pull-requests-limit: 10
+    cooldown:
+      default-days: 3
 
   - package-ecosystem: "gradle"
     directory: "/"
@@ -13,6 +15,8 @@ updates:
       interval: "monthly"
     target-branch: main
     open-pull-requests-limit: 10
+    cooldown:
+      default-days: 3
     allow:
       - dependency-type: "direct"
     ignore:
