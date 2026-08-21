@@ -40,23 +40,23 @@ import org.gradle.kotlin.dsl.property
  *
  * @param objects factory creating this spec's [mode] property
  */
-abstract class NullMarkedVerifySpec @Inject constructor(objects: ObjectFactory) {
+public abstract class NullMarkedVerifySpec @Inject constructor(objects: ObjectFactory) {
 
   /** Verification strictness, defaulting to lenient unless overridden by an inherited or explicit call. */
   internal val mode: Property<VerificationMode> = objects.property()
 
   /** Only requires a `package-info.java` to exist; its content is not inspected. */
-  fun lenient() {
+  public fun lenient() {
     mode.set(VerificationMode.LENIENT)
   }
 
   /** Additionally requires a `package-info.java` to declare `@NullMarked` or `@NullUnmarked`; a bare file fails. */
-  fun explicit() {
+  public fun explicit() {
     mode.set(VerificationMode.EXPLICIT)
   }
 
   /** Additionally requires `@NullMarked` specifically; `@NullUnmarked` or a bare file fails. */
-  fun strict() {
+  public fun strict() {
     mode.set(VerificationMode.STRICT)
   }
 

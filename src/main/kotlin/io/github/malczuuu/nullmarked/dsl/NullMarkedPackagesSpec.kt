@@ -49,7 +49,7 @@ import org.gradle.kotlin.dsl.listProperty
  *
  * @param objects factory creating this spec's [rules] list
  */
-abstract class NullMarkedPackagesSpec @Inject constructor(objects: ObjectFactory) {
+public abstract class NullMarkedPackagesSpec @Inject constructor(objects: ObjectFactory) {
 
   /** Rules in declaration order, inherited ones first. */
   internal val rules: ListProperty<PackageRule> = objects.listProperty<PackageRule>()
@@ -60,7 +60,7 @@ abstract class NullMarkedPackagesSpec @Inject constructor(objects: ObjectFactory
    * @param packages package identifiers (ArchUnit syntax, see [PackagePattern])
    * @throws InvalidUserDataException if any of [packages] is not a valid package identifier
    */
-  fun exclude(vararg packages: String) {
+  public fun exclude(vararg packages: String) {
     addRules(included = false, packages = packages)
   }
 
@@ -71,7 +71,7 @@ abstract class NullMarkedPackagesSpec @Inject constructor(objects: ObjectFactory
    * @param packages package identifiers (ArchUnit syntax, see [PackagePattern])
    * @throws InvalidUserDataException if any of [packages] is not a valid package identifier
    */
-  fun include(vararg packages: String) {
+  public fun include(vararg packages: String) {
     addRules(included = true, packages = packages)
   }
 

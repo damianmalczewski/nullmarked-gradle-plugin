@@ -59,14 +59,14 @@ import org.gradle.util.GradleVersion
  *
  * Requires Gradle [MINIMUM_GRADLE_VERSION] or later. Applying it to a project without the `java` plugin does nothing.
  */
-class NullMarkedPlugin : Plugin<Project> {
+public class NullMarkedPlugin : Plugin<Project> {
 
   /**
    * Apply this plugin to the given target object.
    *
    * @param target The target object
    */
-  override fun apply(target: Project) {
+  public override fun apply(target: Project) {
     requireMinimumGradleVersion(GradleVersion.current())
 
     val extension = target.extensions.create<NullMarkedExtension>("nullmarked")

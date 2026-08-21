@@ -76,7 +76,7 @@ class VerifyPackageInfoTest {
     writeSource("com/acme/Foo.java")
     writeSource("com/acme/package-info.java", "package com.acme;")
 
-    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+    assertThatCode { task.execute() }.doesNotThrowAnyException()
     assertThat(markerFile).exists()
   }
 
@@ -85,7 +85,7 @@ class VerifyPackageInfoTest {
     writeSource("com/acme/Foo.java")
     writeSource("com/other/Bar.java")
 
-    assertThatThrownBy { task.verifyPackageInfos() }
+    assertThatThrownBy { task.execute() }
         .isInstanceOf(VerificationException::class.java)
         .hasMessageContaining("2 package(s)")
         .hasMessageContaining("com.acme: missing package-info.java")
@@ -98,14 +98,14 @@ class VerifyPackageInfoTest {
     writeSource("com/acme/Foo.java")
     task.verifyOnly.set(true)
 
-    assertThatThrownBy { task.verifyPackageInfos() }.hasMessageContaining("disabling nullmarked.verifyOnly")
+    assertThatThrownBy { task.execute() }.hasMessageContaining("disabling nullmarked.verifyOnly")
   }
 
   @Test
   fun `failure does not suggest disabling verifyOnly when it is already off`() {
     writeSource("com/acme/Foo.java")
 
-    assertThatThrownBy { task.verifyPackageInfos() }
+    assertThatThrownBy { task.execute() }
         .hasMessageContaining("nullmarked.packages")
         .hasMessageNotContaining("verifyOnly")
   }
@@ -120,7 +120,7 @@ class VerifyPackageInfoTest {
       writeText("package com.acme;")
     }
 
-    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+    assertThatCode { task.execute() }.doesNotThrowAnyException()
   }
 
   @Test
@@ -128,7 +128,7 @@ class VerifyPackageInfoTest {
     writeSource("com/acme/Foo.java")
     task.packages { exclude("com.acme..") }
 
-    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+    assertThatCode { task.execute() }.doesNotThrowAnyException()
   }
 
   @Test
@@ -136,7 +136,7 @@ class VerifyPackageInfoTest {
     writeSource("com/acme/Foo.java")
     task.inheritPackageRules(inheritedRules(PackageRule(included = false, identifier = "com.acme..")))
 
-    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+    assertThatCode { task.execute() }.doesNotThrowAnyException()
   }
 
   @Test
@@ -145,7 +145,7 @@ class VerifyPackageInfoTest {
     task.inheritPackageRules(inheritedRules(PackageRule(included = false, identifier = "com.acme..")))
     task.packages { include("com.acme") }
 
-    assertThatThrownBy { task.verifyPackageInfos() }.hasMessageContaining("com.acme")
+    assertThatThrownBy { task.execute() }.hasMessageContaining("com.acme")
   }
 
   @Test
@@ -153,7 +153,7 @@ class VerifyPackageInfoTest {
     writeSource("com/acme/Foo.java")
     task.verificationEnabled.set(false)
 
-    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+    assertThatCode { task.execute() }.doesNotThrowAnyException()
     assertThat(markerFile).exists()
   }
 
@@ -161,12 +161,12 @@ class VerifyPackageInfoTest {
   fun `passes for the default package`() {
     writeSource("TopLevel.java")
 
-    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+    assertThatCode { task.execute() }.doesNotThrowAnyException()
   }
 
   @Test
   fun `passes for an empty source set`() {
-    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+    assertThatCode { task.execute() }.doesNotThrowAnyException()
     assertThat(markerFile).exists()
   }
 
@@ -174,10 +174,10 @@ class VerifyPackageInfoTest {
   fun `marker content does not change between runs`() {
     writeSource("com/acme/Foo.java")
     writeSource("com/acme/package-info.java", "package com.acme;")
-    task.verifyPackageInfos()
+    task.execute()
     val before = markerFile.readText()
 
-    task.verifyPackageInfos()
+    task.execute()
 
     assertThat(markerFile.readText()).isEqualTo(before)
   }
@@ -188,7 +188,7 @@ class VerifyPackageInfoTest {
     writeSource("com/acme/package-info.java", "package com.acme;")
     task.verify { lenient() }
 
-    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+    assertThatCode { task.execute() }.doesNotThrowAnyException()
   }
 
   @Test
@@ -197,7 +197,7 @@ class VerifyPackageInfoTest {
     writeSource("com/acme/package-info.java", "package com.acme;")
     task.verify { explicit() }
 
-    assertThatThrownBy { task.verifyPackageInfos() }
+    assertThatThrownBy { task.execute() }
         .hasMessageContaining("com.acme: package-info.java present but declares neither @NullMarked nor @NullUnmarked")
   }
 
@@ -215,7 +215,7 @@ class VerifyPackageInfoTest {
     )
     task.verify { explicit() }
 
-    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+    assertThatCode { task.execute() }.doesNotThrowAnyException()
   }
 
   @Test
@@ -232,7 +232,7 @@ class VerifyPackageInfoTest {
     )
     task.verify { explicit() }
 
-    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+    assertThatCode { task.execute() }.doesNotThrowAnyException()
   }
 
   @Test
@@ -247,7 +247,7 @@ class VerifyPackageInfoTest {
     )
     task.verify { explicit() }
 
-    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+    assertThatCode { task.execute() }.doesNotThrowAnyException()
   }
 
   @Test
@@ -264,7 +264,7 @@ class VerifyPackageInfoTest {
     )
     task.verify { strict() }
 
-    assertThatThrownBy { task.verifyPackageInfos() }
+    assertThatThrownBy { task.execute() }
         .hasMessageContaining("com.acme: package-info.java declares @NullUnmarked, but @NullMarked is required")
   }
 
@@ -274,7 +274,7 @@ class VerifyPackageInfoTest {
     writeSource("com/acme/package-info.java", "package com.acme;")
     task.verify { strict() }
 
-    assertThatThrownBy { task.verifyPackageInfos() }.hasMessageContaining("declares neither @NullMarked")
+    assertThatThrownBy { task.execute() }.hasMessageContaining("declares neither @NullMarked")
   }
 
   @Test
@@ -291,7 +291,7 @@ class VerifyPackageInfoTest {
     )
     task.verify { strict() }
 
-    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+    assertThatCode { task.execute() }.doesNotThrowAnyException()
   }
 
   @Test
@@ -309,7 +309,7 @@ class VerifyPackageInfoTest {
     )
     task.verify { explicit() }
 
-    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+    assertThatCode { task.execute() }.doesNotThrowAnyException()
   }
 
   @Test
@@ -325,7 +325,7 @@ class VerifyPackageInfoTest {
     )
     task.verify { explicit() }
 
-    assertThatThrownBy { task.verifyPackageInfos() }
+    assertThatThrownBy { task.execute() }
         .hasMessageContaining("com.acme: package-info.java declares both @NullMarked and @NullUnmarked")
   }
 
@@ -342,7 +342,7 @@ class VerifyPackageInfoTest {
     )
     task.verify { strict() }
 
-    assertThatThrownBy { task.verifyPackageInfos() }.hasMessageContaining("declares both @NullMarked and @NullUnmarked")
+    assertThatThrownBy { task.execute() }.hasMessageContaining("declares both @NullMarked and @NullUnmarked")
   }
 
   @Test
@@ -350,7 +350,7 @@ class VerifyPackageInfoTest {
     writeSource("com/acme/Foo.java")
     writeSource("com/acme/package-info.java", "package com.acme;")
 
-    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+    assertThatCode { task.execute() }.doesNotThrowAnyException()
   }
 
   @Test
@@ -359,7 +359,7 @@ class VerifyPackageInfoTest {
     writeSource("com/acme/package-info.java", "package com.acme;")
     task.inheritVerificationMode(inheritedMode(VerificationMode.STRICT))
 
-    assertThatThrownBy { task.verifyPackageInfos() }.hasMessageContaining("declares neither @NullMarked")
+    assertThatThrownBy { task.execute() }.hasMessageContaining("declares neither @NullMarked")
   }
 
   @Test
@@ -369,6 +369,6 @@ class VerifyPackageInfoTest {
     task.inheritVerificationMode(inheritedMode(VerificationMode.STRICT))
     task.verify { lenient() }
 
-    assertThatCode { task.verifyPackageInfos() }.doesNotThrowAnyException()
+    assertThatCode { task.execute() }.doesNotThrowAnyException()
   }
 }
