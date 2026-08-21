@@ -257,7 +257,7 @@ The plugin reacts to the `java` plugin and scans the Java source directories of 
    ```kotlin
    plugins {
        java
-       id("io.github.malczuuu.nullmarked") version "0.7.2-SNAPSHOT"
+       id("io.github.malczuuu.nullmarked") version "1.0.1-SNAPSHOT"
    }
    ```
 
