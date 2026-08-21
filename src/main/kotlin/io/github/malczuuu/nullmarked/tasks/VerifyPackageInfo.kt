@@ -59,7 +59,7 @@ import org.gradle.kotlin.dsl.newInstance
  * @param objects factory creating this task's `packages { ... }` block
  */
 @CacheableTask
-abstract class VerifyPackageInfo @Inject constructor(objects: ObjectFactory) : DefaultTask() {
+public abstract class VerifyPackageInfo @Inject constructor(objects: ObjectFactory) : DefaultTask() {
 
   init {
     verificationEnabled.convention(true)
@@ -67,13 +67,13 @@ abstract class VerifyPackageInfo @Inject constructor(objects: ObjectFactory) : D
   }
 
   /** Whether verification is performed. When `false`, the task passes unconditionally. */
-  @get:Input abstract val verificationEnabled: Property<Boolean>
+  @get:Input public abstract val verificationEnabled: Property<Boolean>
 
   /**
    * Whether the source set opted out of generated `package-info.java` files. Does not change what is verified, only how
    * a failure is explained: suggesting to turn `verifyOnly` off makes no sense when it is off already.
    */
-  @get:Input abstract val verifyOnly: Property<Boolean>
+  @get:Input public abstract val verifyOnly: Property<Boolean>
 
   private val packagesSpec: NullMarkedPackagesSpec = objects.newInstance()
 
@@ -83,7 +83,7 @@ abstract class VerifyPackageInfo @Inject constructor(objects: ObjectFactory) : D
    * this task's own [packages] block, see [NullMarkedPackagesSpec].
    */
   @get:Input
-  val packageRules: Provider<List<String>>
+  public val packageRules: Provider<List<String>>
     get() = packagesSpec.getEncodedRules()
 
   private val verifySpec: NullMarkedVerifySpec =
@@ -94,27 +94,27 @@ abstract class VerifyPackageInfo @Inject constructor(objects: ObjectFactory) : D
    * it through the `nullmarked { verify { ... } }` block or this task's own [verify] block, see [NullMarkedVerifySpec].
    */
   @get:Input
-  val verificationMode: Provider<String>
+  public val verificationMode: Provider<String>
     get() = verifySpec.getEncodedMode()
 
   /** Java source directories to scan, including the generated one when generation is enabled. */
   @get:InputFiles
   @get:IgnoreEmptyDirectories
   @get:PathSensitive(PathSensitivity.RELATIVE)
-  abstract val sourceDirectories: ConfigurableFileCollection
+  public abstract val sourceDirectories: ConfigurableFileCollection
 
   /**
    * Marker file written on success. The task produces no real artifact; the marker only gives Gradle an output to base
    * up-to-date checks and caching on.
    */
-  @get:OutputFile abstract val buildCacheMarker: RegularFileProperty
+  @get:OutputFile public abstract val buildCacheMarker: RegularFileProperty
 
   /**
    * Fails with a [VerificationException] listing every package missing a `package-info.java`, or writes
    * [buildCacheMarker] when there is nothing to report.
    */
   @TaskAction
-  fun verifyPackageInfos() {
+  public fun execute() {
     val violations = findViolations()
     if (violations.isNotEmpty()) {
       throw VerificationException(violationsMessage(violations))
@@ -138,7 +138,7 @@ abstract class VerifyPackageInfo @Inject constructor(objects: ObjectFactory) : D
    *
    * @param configuration action applied to the package rules
    */
-  fun packages(configuration: Action<in NullMarkedPackagesSpec>) {
+  public fun packages(configuration: Action<in NullMarkedPackagesSpec>) {
     configuration.execute(packagesSpec)
   }
 
@@ -158,7 +158,7 @@ abstract class VerifyPackageInfo @Inject constructor(objects: ObjectFactory) : D
    *
    * @param configuration action applied to the verification mode
    */
-  fun verify(configuration: Action<in NullMarkedVerifySpec>) {
+  public fun verify(configuration: Action<in NullMarkedVerifySpec>) {
     configuration.execute(verifySpec)
   }
 

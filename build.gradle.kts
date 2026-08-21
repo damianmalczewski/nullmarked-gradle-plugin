@@ -22,7 +22,6 @@ java {
         languageVersion = JavaLanguageVersion.of(21)
     }
 }
-
 tasks.named<JavaCompile>("compileJava").configure {
     options.compilerArgs.add("-parameters")
     options.release = 8
@@ -33,11 +32,11 @@ kotlin {
         languageVersion = JavaLanguageVersion.of(21)
     }
     compilerOptions {
+        explicitApi()
         apiVersion = KotlinVersion.KOTLIN_1_9
         languageVersion = KotlinVersion.KOTLIN_1_9
     }
 }
-
 tasks.named<KotlinCompile>("compileKotlin").configure {
     compilerOptions {
         javaParameters = true

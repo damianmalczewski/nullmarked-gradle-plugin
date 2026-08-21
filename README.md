@@ -163,8 +163,8 @@ nullmarked {
 
 Both `explicit()` and `strict()` fail on a file declaring both annotations.
 
-The same block works on a `sourceSet (...), overriding whatever it would otherwise inherit - whichever call happens last
-wins:
+The same block works on a `sourceSet(...) { ... }`, overriding whatever it would otherwise inherit - whichever call
+happens last wins:
 
 ```kotlin
 nullmarked {
