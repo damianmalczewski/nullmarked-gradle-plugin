@@ -19,7 +19,6 @@ tasks.withType<JavaCompile>().configureEach {
         error("NullAway")
         option("NullAway:OnlyNullMarked", "true")
         option("NullAway:JSpecifyMode", "true")
-        option("NullAway:JSpecifyExperimental", "true")
     }
 }
 
@@ -33,7 +32,7 @@ kotlin {
 
 dependencies {
     errorprone("com.google.errorprone:error_prone_core:2.50.0")
-    errorprone("com.uber.nullaway:nullaway:0.14.0")
+    errorprone("com.uber.nullaway:nullaway:0.13.8")
 }
 
 application {
