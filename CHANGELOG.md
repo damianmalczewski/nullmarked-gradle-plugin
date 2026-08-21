@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog][keepachangelog], and this project adhe
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-21
+
+> [!NOTE]
+> This entry consolidates all `0.x` releases into a single set of features for the `1.0.0` baseline; see below for the
+> original per-version history.
+
+### Added
+
+- Add `io.github.malczuuu.nullmarked` plugin generating a `@NullMarked`-annotated `package-info.java` for every
+  non-empty package of a source set that does not declare its own.
+- Add a `generatePackageInfo` task per configured source set (`generateTestPackageInfo`, etc.), registering its output
+  directory as a source directory so `compileJava` picks it up automatically; hand-written `package-info.java` files
+  always win.
+- Add a `verifyPackageInfo` task per configured source set (`verifyTestPackageInfo`, etc.), run before compilation.
+- Add `org.jspecify:jspecify` as a `compileOnly` dependency unless the build script already declares it in
+  `compileOnly`, `implementation`, `api` or `compileOnlyApi`.
+- Add `nullmarked { sourceSet("...") }` to opt other source sets (e.g. `test`) with `main` source set is processed by
+  default.
+- Add a `packages { }` block offering `exclude(...)` and `include(...)`, available at the top level and per source set.
+- Add `verifyOnly` (top-level and per source set) to opt out of generated code: nothing is generated and only
+  hand-written `package-info.java` files satisfy verification.
+- Add a `verify { }` block for selecting verification strictness: `lenient()`, `explicit()`, and `strict()`.
+- Validate usage of Gradle `8.3` or later explicitly, failing with an explicit message below it.
+
 ## [0.7.1] - 2026-07-31
 
 ### Changed

@@ -47,7 +47,7 @@ Apply plugin in `build.gradle.kts`.
 ```kotlin
 plugins {
     java
-    id("io.github.malczuuu.nullmarked") version "0.7.1"
+    id("io.github.malczuuu.nullmarked") version "1.0.0"
 }
 ```
 
