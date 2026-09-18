@@ -14,7 +14,7 @@ plugins {
     signing
     id("com.diffplug.spotless") version "8.10.1"
     id("com.gradle.plugin-publish") version "2.1.1"
-    id("org.gradle.plugin-compatibility") version "1.0.0"
+    id("org.gradle.plugin-compatibility") version "1.1.0"
 }
 
 java {
