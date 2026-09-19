@@ -657,6 +657,27 @@ class NullMarkedPluginFunctionalTest {
   }
 
   @Test
+  fun `a nested block cannot implicitly call an enclosing block's method`() {
+    project.appendToBuildScript(
+        """
+        nullmarked {
+            sourceSet("test") {
+                packages {
+                    verify {
+                        strict()
+                    }
+                }
+            }
+        }
+        """
+    )
+
+    val result = project.runner("help").buildAndFail()
+
+    assertThat(result.output).contains("cannot be called in this context with an implicit receiver")
+  }
+
+  @Test
   fun `fails on a source set no java source set matches`() {
     project.appendToBuildScript(
         """

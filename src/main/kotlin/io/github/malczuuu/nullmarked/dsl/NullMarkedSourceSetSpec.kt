@@ -33,6 +33,7 @@ import org.gradle.kotlin.dsl.newInstance
  * @param name name of the Gradle `SourceSet` this spec configures, e.g. `"main"` or `"test"`
  * @param objects factory creating this spec's own `packages { ... }` block
  */
+@NullMarkedDslMarker
 public abstract class NullMarkedSourceSetSpec @Inject constructor(private val name: String, objects: ObjectFactory) :
     Named {
 

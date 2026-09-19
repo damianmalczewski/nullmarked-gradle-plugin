@@ -31,6 +31,7 @@ import org.gradle.kotlin.dsl.newInstance
  *
  * @param objects factory creating the top-level `packages { ... }` block and the [sourceSets] container
  */
+@NullMarkedDslMarker
 public abstract class NullMarkedExtension @Inject constructor(objects: ObjectFactory) {
 
   /**
