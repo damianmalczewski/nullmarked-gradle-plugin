@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog][keepachangelog], and this project adhe
 
 ## [Unreleased]
 
+### Fixed
+
+- Mark the `nullmarked { }` DSL with `@DslMarker`, so a nested Kotlin DSL block can no longer implicitly call an
+  enclosing block's method (e.g. `sourceSet("test") { packages { verify { } } }` now fails to compile instead of
+  configuring the source set's `verify { }`).
+
 ## [1.0.0] - 2026-08-21
 
 > [!NOTE]

@@ -49,6 +49,7 @@ import org.gradle.kotlin.dsl.listProperty
  *
  * @param objects factory creating this spec's [rules] list
  */
+@NullMarkedDslMarker
 public abstract class NullMarkedPackagesSpec @Inject constructor(objects: ObjectFactory) {
 
   /** Rules in declaration order, inherited ones first. */

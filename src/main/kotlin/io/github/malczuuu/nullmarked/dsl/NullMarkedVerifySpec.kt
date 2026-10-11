@@ -40,6 +40,7 @@ import org.gradle.kotlin.dsl.property
  *
  * @param objects factory creating this spec's [mode] property
  */
+@NullMarkedDslMarker
 public abstract class NullMarkedVerifySpec @Inject constructor(objects: ObjectFactory) {
 
   /** Verification strictness, defaulting to lenient unless overridden by an inherited or explicit call. */
