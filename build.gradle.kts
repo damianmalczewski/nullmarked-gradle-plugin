@@ -12,7 +12,7 @@ plugins {
     `kotlin-dsl`
     `maven-publish`
     signing
-    id("com.diffplug.spotless") version "8.10.3"
+    id("com.diffplug.spotless") version "8.10.4"
     id("com.gradle.plugin-publish") version "2.2.1"
     id("org.gradle.plugin-compatibility") version "1.1.0"
 }
