@@ -194,7 +194,7 @@ spotless {
         target("src/**/*.kt")
         licenseHeaderFile("${rootProject.rootDir}/gradle/LicenseHeader.kt")
 
-        ktfmt("0.64").metaStyle().configure {
+        ktfmt().metaStyle().configure {
             it.setMaxWidth(120)
             it.setRemoveUnusedImports(true)
             it.setTrailingCommaManagementStrategy(KtfmtStep.TrailingCommaManagementStrategy.COMPLETE)
@@ -206,7 +206,7 @@ spotless {
         target("**/*.gradle.kts")
         targetExclude("**/build/**")
 
-        ktlint("1.8.0").editorConfigOverride(mapOf("max_line_length" to "120"))
+        ktlint().editorConfigOverride(mapOf("max_line_length" to "120"))
         endWithNewline()
         lineEndings = LineEnding.UNIX
     }

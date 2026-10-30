@@ -77,7 +77,7 @@ class GroovyDslFunctionalTest {
                 enabled = false
             }
         }
-        """
+        """,
     )
 
     val result = project.runner("compileJava", "compileTestJava").build()
@@ -99,7 +99,7 @@ class GroovyDslFunctionalTest {
                 exclude 'com.acme..'
             }
         }
-        """
+        """,
     )
 
     val result = project.runner("generatePackageInfo").build()
@@ -117,7 +117,7 @@ class GroovyDslFunctionalTest {
                 exclude 'com.acme!!'
             }
         }
-        """
+        """,
     )
 
     val result = project.runner("generatePackageInfo").buildAndFail()

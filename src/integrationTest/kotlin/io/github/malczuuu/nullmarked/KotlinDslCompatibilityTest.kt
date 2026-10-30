@@ -68,7 +68,7 @@ class KotlinDslCompatibilityTest {
                 exclude("com.acme.taskexcluded..")
             }
         }
-        """
+        """,
     )
 
     val runner = project.runner("compileJava", "compileTestJava")
@@ -99,7 +99,7 @@ class KotlinDslCompatibilityTest {
         nullmarked {
             verifyOnly = true
         }
-        """
+        """,
     )
 
     val runner = project.runner("compileJava")

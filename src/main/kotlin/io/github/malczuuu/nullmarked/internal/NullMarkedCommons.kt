@@ -67,7 +67,7 @@ internal fun parseJSpecifyCoordinate(value: String): JSpecifyCoordinate {
     else ->
         throw InvalidUserDataException(
             "nullmarked.jspecifyVersion must be either a version (e.g. \"1.0.1\") or a full dependency notation " +
-                "(e.g. \"org.jspecify:jspecify:1.0.1\"), but was: \"$value\"."
+                "(e.g. \"org.jspecify:jspecify:1.0.1\"), but was: \"$value\".",
         )
   }
 }
@@ -83,7 +83,7 @@ internal fun requireMinimumGradleVersion(current: GradleVersion) {
   if (current < GradleVersion.version(MINIMUM_GRADLE_VERSION)) {
     throw GradleException(
         "The io.github.malczuuu.nullmarked plugin requires Gradle $MINIMUM_GRADLE_VERSION or later, but was applied " +
-            "to Gradle ${current.version}."
+            "to Gradle ${current.version}.",
     )
   }
 }

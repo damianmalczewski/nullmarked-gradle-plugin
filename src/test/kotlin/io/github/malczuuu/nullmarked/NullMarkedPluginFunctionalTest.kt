@@ -75,7 +75,7 @@ class NullMarkedPluginFunctionalTest {
                 compileClasspath.files.forEach { println("RESOLVED " + it.name) }
             }
         }
-        """
+        """,
     )
 
     project.runner("resolveCompileClasspath", "--configuration-cache").build()
@@ -92,7 +92,7 @@ class NullMarkedPluginFunctionalTest {
         dependencies {
             compileOnly("org.jspecify:jspecify:0.3.0")
         }
-        """
+        """,
     )
 
     val result = project.runner("dependencies", "--configuration", "compileClasspath").build()
@@ -113,7 +113,7 @@ class NullMarkedPluginFunctionalTest {
         dependencies {
             compileOnly("org.jspecify:jspecify:1.0.1")
         }
-        """
+        """,
     )
 
     val result = project.runner("compileJava").build()
@@ -130,7 +130,7 @@ class NullMarkedPluginFunctionalTest {
         nullmarked {
             enabled = false
         }
-        """
+        """,
     )
 
     val result = project.runner("dependencies", "--configuration", "compileClasspath").build()
@@ -145,7 +145,7 @@ class NullMarkedPluginFunctionalTest {
         nullmarked {
             verifyOnly = true
         }
-        """
+        """,
     )
 
     val result = project.runner("dependencies", "--configuration", "compileClasspath").build()
@@ -162,7 +162,7 @@ class NullMarkedPluginFunctionalTest {
                 exclude("com.acme..")
             }
         }
-        """
+        """,
     )
 
     val result = project.runner("generatePackageInfo").build()
@@ -183,7 +183,7 @@ class NullMarkedPluginFunctionalTest {
                 exclude("com.acme..")
             }
         }
-        """
+        """,
     )
     val secondRun = project.runner("generatePackageInfo").build()
 
@@ -206,7 +206,7 @@ class NullMarkedPluginFunctionalTest {
                 exclude("com.acme..")
             }
         }
-        """
+        """,
     )
 
     val result = project.runner("compileJava", "--configuration-cache").build()
@@ -230,7 +230,7 @@ class NullMarkedPluginFunctionalTest {
                 include("com.acme")
             }
         }
-        """
+        """,
     )
 
     project.runner("generatePackageInfo").build()
@@ -247,7 +247,7 @@ class NullMarkedPluginFunctionalTest {
                 exclude("com.acme..")
             }
         }
-        """
+        """,
     )
 
     project.runner("generatePackageInfo", "--configuration-cache").build()
@@ -275,7 +275,7 @@ class NullMarkedPluginFunctionalTest {
                 include("com.acme.internal")
             }
         }
-        """
+        """,
     )
 
     val result = project.runner("generatePackageInfo").build()
@@ -307,7 +307,7 @@ class NullMarkedPluginFunctionalTest {
                 exclude("com.acme..")
             }
         }
-        """
+        """,
     )
 
     val result = project.runner("compileJava", "compileTestJava").build()
@@ -332,7 +332,7 @@ class NullMarkedPluginFunctionalTest {
         nullmarked {
             sourceSet("test") {}
         }
-        """
+        """,
     )
 
     val result = project.runner("compileTestJava").build()
@@ -357,7 +357,7 @@ class NullMarkedPluginFunctionalTest {
         nullmarked {
             sourceSet("test") {}
         }
-        """
+        """,
     )
 
     val result = project.runner("dependencies", "--configuration", "testCompileClasspath").build()
@@ -402,7 +402,7 @@ class NullMarkedPluginFunctionalTest {
         nullmarked {
             sourceSet("main21") {}
         }
-        """
+        """,
     )
 
     val result = project.runner("compileJava", "compileMain21Java").build()
@@ -455,7 +455,7 @@ class NullMarkedPluginFunctionalTest {
         nullmarked {
             verifyOnly = true
         }
-        """
+        """,
     )
 
     val result = project.runner("compileJava").buildAndFail()
@@ -485,7 +485,7 @@ class NullMarkedPluginFunctionalTest {
         nullmarked {
             verifyOnly = true
         }
-        """
+        """,
     )
 
     val result = project.runner("compileJava").build()
@@ -505,7 +505,7 @@ class NullMarkedPluginFunctionalTest {
                 exclude("com.acme")
             }
         }
-        """
+        """,
     )
 
     val result = project.runner("verifyPackageInfo").build()
@@ -526,7 +526,7 @@ class NullMarkedPluginFunctionalTest {
         dependencies {
             compileOnly("org.jspecify:jspecify:1.0.1")
         }
-        """
+        """,
     )
 
     val result = project.runner("compileJava").build()
@@ -544,7 +544,7 @@ class NullMarkedPluginFunctionalTest {
                 strict()
             }
         }
-        """
+        """,
     )
 
     val result = project.runner("verifyPackageInfo").build()
@@ -570,7 +570,7 @@ class NullMarkedPluginFunctionalTest {
                 strict()
             }
         }
-        """
+        """,
     )
 
     val result = project.runner("verifyPackageInfo").buildAndFail()
@@ -604,7 +604,7 @@ class NullMarkedPluginFunctionalTest {
                 lenient()
             }
         }
-        """
+        """,
     )
 
     val result = project.runner("verifyPackageInfo").build()
@@ -629,7 +629,7 @@ class NullMarkedPluginFunctionalTest {
                 verifyOnly = true
             }
         }
-        """
+        """,
     )
 
     val result = project.runner("compileTestJava").buildAndFail()
@@ -648,7 +648,7 @@ class NullMarkedPluginFunctionalTest {
         nullmarked {
             enabled = false
         }
-        """
+        """,
     )
     val result = project.runner("generatePackageInfo").build()
 
@@ -669,7 +669,7 @@ class NullMarkedPluginFunctionalTest {
                 }
             }
         }
-        """
+        """,
     )
 
     val result = project.runner("help").buildAndFail()
@@ -686,7 +686,7 @@ class NullMarkedPluginFunctionalTest {
                 verifyOnly = true
             }
         }
-        """
+        """,
     )
 
     val result = project.runner("generatePackageInfo").buildAndFail()
@@ -703,7 +703,7 @@ class NullMarkedPluginFunctionalTest {
             sourceSet("nope")
             sourceSet("alsoNope")
         }
-        """
+        """,
     )
 
     val result = project.runner("generatePackageInfo").buildAndFail()
@@ -722,7 +722,7 @@ class NullMarkedPluginFunctionalTest {
         sourceSets {
             create("extra")
         }
-        """
+        """,
     )
 
     val result = project.runner("generateExtraPackageInfo").build()
@@ -739,7 +739,7 @@ class NullMarkedPluginFunctionalTest {
                 exclude("com.acme!!")
             }
         }
-        """
+        """,
     )
 
     val result = project.runner("tasks").buildAndFail()

@@ -56,7 +56,7 @@ class PackageInfoCommonsTest {
             @org.jspecify.annotations.NullMarked
             package com.acme;
             """
-                .trimIndent() + "\n"
+                .trimIndent() + "\n",
         )
   }
 
@@ -72,7 +72,7 @@ class PackageInfoCommonsTest {
             @org.jspecify.annotations.NullMarked
             package com.acme;
             """
-                .trimIndent() + "\n"
+                .trimIndent() + "\n",
         )
   }
 
