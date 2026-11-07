@@ -17,11 +17,10 @@ public final class ExecutorFactory {
 
   public static ExecutorService create() {
     ThreadFactory factory = Thread.ofVirtual().factory();
-    return Executors.newThreadPerTaskExecutor(
-        r -> {
-          Thread thread = factory.newThread(r);
-          System.out.println("NOTICE: " + ExecutorDiagnostics.describe(thread));
-          return thread;
-        });
+    return Executors.newThreadPerTaskExecutor(r -> {
+      Thread thread = factory.newThread(r);
+      System.out.println("NOTICE: " + ExecutorDiagnostics.describe(thread));
+      return thread;
+    });
   }
 }

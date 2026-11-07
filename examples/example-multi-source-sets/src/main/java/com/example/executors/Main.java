@@ -14,10 +14,9 @@ public final class Main {
     ExecutorService executor = ExecutorFactory.create();
     try {
       executor
-          .submit(
-              () ->
-                  System.out.println(
-                      "Java " + Runtime.version().feature() + " -> " + Thread.currentThread()))
+          .submit(() ->
+              System.out.println(
+                  "Java " + Runtime.version().feature() + " -> " + Thread.currentThread()))
           .get();
     } catch (Exception e) {
       throw new RuntimeException(e);

@@ -22,7 +22,7 @@ java {
         languageVersion = JavaLanguageVersion.of(21)
     }
 }
-tasks.named<JavaCompile>("compileJava").configure {
+tasks.named<JavaCompile>("compileJava") {
     options.compilerArgs.add("-parameters")
     options.release = 8
 }
@@ -38,7 +38,7 @@ kotlin {
         languageVersion = KotlinVersion.KOTLIN_1_9
     }
 }
-tasks.named<KotlinCompile>("compileKotlin").configure {
+tasks.named<KotlinCompile>("compileKotlin") {
     compilerOptions {
         javaParameters = true
         jvmTarget = JvmTarget.JVM_1_8
@@ -99,7 +99,7 @@ tasks.withType<Test>().configureEach {
     }
 }
 
-tasks.named<Test>("integrationTest").configure {
+tasks.named<Test>("integrationTest") {
     providers.gradleProperty("compat.gradle.version").orNull?.let {
         systemProperty("compat.gradle.version", it)
     }
@@ -227,7 +227,7 @@ tasks.withType<Jar>().configureEach {
     }
 }
 
-tasks.named<JacocoReport>("jacocoTestReport").configure {
+tasks.named<JacocoReport>("jacocoTestReport") {
     dependsOn(tasks.named("test"))
     reports {
         xml.required = true
@@ -236,7 +236,7 @@ tasks.named<JacocoReport>("jacocoTestReport").configure {
     }
 }
 
-tasks.named<Task>("check").configure {
+tasks.named<Task>("check") {
     finalizedBy(tasks.named("jacocoTestReport"))
 }
 

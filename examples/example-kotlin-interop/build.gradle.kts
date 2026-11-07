@@ -3,9 +3,9 @@ import net.ltgt.gradle.errorprone.errorprone
 plugins {
     application
     java
-    kotlin("jvm") version "2.4.10"
+    kotlin("jvm") version "2.4.21"
     id("io.github.malczuuu.nullmarked") version "1.0.0"
-    id("net.ltgt.errorprone") version "5.1.0"
+    id("net.ltgt.errorprone") version "5.2.0"
 }
 
 java {
@@ -31,8 +31,8 @@ kotlin {
 }
 
 dependencies {
-    errorprone("com.google.errorprone:error_prone_core:2.50.0")
-    errorprone("com.uber.nullaway:nullaway:0.14.0")
+    errorprone("com.google.errorprone:error_prone_core:2.52.0")
+    errorprone("com.uber.nullaway:nullaway:0.14.3")
 }
 
 application {

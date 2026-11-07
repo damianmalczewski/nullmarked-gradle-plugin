@@ -70,12 +70,12 @@ cat build/generated/sources/nullmarked/java/main/com/example/orders/package-info
 plugins {
     java
     id("io.github.malczuuu.nullmarked") version "1.0.0"
-    id("net.ltgt.errorprone") version "5.1.0"
+    id("net.ltgt.errorprone") version "5.2.0"
 }
 
 dependencies {
-    errorprone("com.google.errorprone:error_prone_core:2.50.0")
-    errorprone("com.uber.nullaway:nullaway:0.14.0")
+    errorprone("com.google.errorprone:error_prone_core:2.52.0")
+    errorprone("com.uber.nullaway:nullaway:0.14.3")
 }
 
 tasks.withType<JavaCompile>().configureEach {
